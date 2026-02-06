@@ -14,6 +14,7 @@ import { RedPacket } from '../objects/RedPacket.js';
 import { SpringWord } from '../objects/SpringWord.js';
 import type { LevelType } from '../types/index.js';
 import { HUD } from '../ui/HUD.js';
+import { VirtualButtons } from '../ui/VirtualButtons.js';
 import { COLORS, LEVELS, PLAYER } from '../utils/constants.js';
 
 interface GameData {
@@ -32,6 +33,7 @@ export class GameScene extends Scene {
     petals: Phaser.GameObjects.Graphics[] = [];
     backgrounds: Phaser.GameObjects.TileSprite[] = [];
     hud!: HUD;
+    virtualButtons!: VirtualButtons;
 
     lastObstacleTime = 0;
     obstacleInterval = 2000;
@@ -65,6 +67,7 @@ export class GameScene extends Scene {
         this.createCollisions();
         this.createInput();
         this.createHUD();
+        this.createVirtualButtons();
         this.createDecorations();
 
         this.setupPauseHandler();
@@ -181,6 +184,18 @@ export class GameScene extends Scene {
             }
         });
 
+        InputManager.getInstance().onLeft(() => {
+            if (!this.isPaused && !this.isGameOver) {
+                this.player.moveLeft();
+            }
+        });
+
+        InputManager.getInstance().onRight(() => {
+            if (!this.isPaused && !this.isGameOver) {
+                this.player.moveRight();
+            }
+        });
+
         this.input.keyboard?.on('keyup-DOWN', () => {
             this.player.stopDuck();
         });
@@ -188,10 +203,60 @@ export class GameScene extends Scene {
         this.input.keyboard?.on('keyup-S', () => {
             this.player.stopDuck();
         });
+
+        this.input.keyboard?.on('keyup-A', () => {
+            this.player.stopMoveX();
+        });
+
+        this.input.keyboard?.on('keyup-D', () => {
+            this.player.stopMoveX();
+        });
+
+        this.input.keyboard?.on('keyup-LEFT', () => {
+            this.player.stopMoveX();
+        });
+
+        this.input.keyboard?.on('keyup-RIGHT', () => {
+            this.player.stopMoveX();
+        });
     }
 
     private createHUD(): void {
         this.hud = new HUD(this);
+    }
+
+    private createVirtualButtons(): void {
+        this.virtualButtons = new VirtualButtons(this);
+        
+        if (this.virtualButtons.hasJoystick()) {
+            this.virtualButtons.onJoystickMove((x: number, y: number) => {
+                if (this.isPaused || this.isGameOver) return;
+
+                const threshold = 0.3;
+
+                if (y < -threshold) {
+                    this.player.jump();
+                } else if (y > threshold) {
+                    this.player.duck();
+                } else {
+                    this.player.stopDuck();
+                }
+
+                if (x < -threshold) {
+                    this.player.moveLeft();
+                } else if (x > threshold) {
+                    this.player.moveRight();
+                } else {
+                    this.player.stopMoveX();
+                }
+            });
+
+            this.virtualButtons.onJoystickRelease(() => {
+                if (this.isPaused || this.isGameOver) return;
+                this.player.stopMoveX();
+                this.player.stopDuck();
+            });
+        }
     }
 
     private setupPauseHandler(): void {

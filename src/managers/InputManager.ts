@@ -7,14 +7,20 @@ export class InputManager {
     private jumpKey: Phaser.Input.Keyboard.Key | null = null;
     private duckKey: Phaser.Input.Keyboard.Key | null = null;
     private activateKey: Phaser.Input.Keyboard.Key | null = null;
+    private leftKey: Phaser.Input.Keyboard.Key | null = null;
+    private rightKey: Phaser.Input.Keyboard.Key | null = null;
     
     private jumpPressed = false;
     private duckPressed = false;
     private activatePressed = false;
+    private leftPressed = false;
+    private rightPressed = false;
     
     private onJumpCallback: (() => void) | null = null;
     private onDuckCallback: (() => void) | null = null;
     private onActivateCallback: (() => void) | null = null;
+    private onLeftCallback: (() => void) | null = null;
+    private onRightCallback: (() => void) | null = null;
 
     private constructor() {}
 
@@ -33,6 +39,8 @@ export class InputManager {
             this.jumpKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
             this.duckKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
             this.activateKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+            this.leftKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+            this.rightKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         }
         
         this.setupTouchInput();
@@ -77,11 +85,15 @@ export class InputManager {
         
         const wasJumpPressed = this.jumpPressed;
         const wasDuckPressed = this.duckPressed;
+        const wasLeftPressed = this.leftPressed;
+        const wasRightPressed = this.rightPressed;
         
         if (this.cursors) {
             this.jumpPressed = this.cursors.up.isDown || this.cursors.space.isDown || this.jumpKey?.isDown || false;
             this.duckPressed = this.cursors.down.isDown || this.duckKey?.isDown || false;
             this.activatePressed = this.activateKey?.isDown || false;
+            this.leftPressed = this.cursors.left.isDown || this.leftKey?.isDown || false;
+            this.rightPressed = this.cursors.right.isDown || this.rightKey?.isDown || false;
         }
         
         if (this.jumpPressed && !wasJumpPressed) {
@@ -90,6 +102,14 @@ export class InputManager {
         
         if (this.duckPressed && !wasDuckPressed) {
             this.onDuckCallback?.();
+        }
+        
+        if (this.leftPressed && !wasLeftPressed) {
+            this.onLeftCallback?.();
+        }
+        
+        if (this.rightPressed && !wasRightPressed) {
+            this.onRightCallback?.();
         }
     }
 
@@ -105,6 +125,14 @@ export class InputManager {
         return this.activatePressed;
     }
 
+    isLeftPressed(): boolean {
+        return this.leftPressed;
+    }
+
+    isRightPressed(): boolean {
+        return this.rightPressed;
+    }
+
     onJump(callback: () => void): void {
         this.onJumpCallback = callback;
     }
@@ -117,9 +145,19 @@ export class InputManager {
         this.onActivateCallback = callback;
     }
 
+    onLeft(callback: () => void): void {
+        this.onLeftCallback = callback;
+    }
+
+    onRight(callback: () => void): void {
+        this.onRightCallback = callback;
+    }
+
     clearCallbacks(): void {
         this.onJumpCallback = null;
         this.onDuckCallback = null;
         this.onActivateCallback = null;
+        this.onLeftCallback = null;
+        this.onRightCallback = null;
     }
 }

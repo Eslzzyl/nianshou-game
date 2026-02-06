@@ -99,8 +99,10 @@ export const PLAYER = {
     Y: 548,  // 玩家中心点，站在地面上（地面顶部580 - 玩家半高32 = 548）
     WIDTH: 64,
     HEIGHT: 64,
-    JUMP_VELOCITY: -450,
+    JUMP_VELOCITY: -600,
     GRAVITY: 1000,
+    MOVE_SPEED: 300,
+    AIR_MOVE_SPEED: 200,
     COYOTE_TIME: 100,
     DUCK_HEIGHT: 32,
     INVINCIBLE_DURATION: 3000,

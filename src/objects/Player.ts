@@ -162,7 +162,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
+        // 边界检查
+        this.clampPosition();
+
         this.handleStateAnimation();
+    }
+
+    private clampPosition(): void {
+        const minX = 32;
+        const maxX = this.scene.scale.width - 32;
+        this.x = Phaser.Math.Clamp(this.x, minX, maxX);
     }
 
     private handleStateAnimation(): void {
@@ -223,6 +232,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.setSize(PLAYER.WIDTH, PLAYER.HEIGHT);
             this.setOffset(0, 0);
         }
+    }
+
+    moveLeft(): void {
+        const speed = this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED;
+        this.setVelocityX(-speed);
+        this.setFlipX(true);
+    }
+
+    moveRight(): void {
+        const speed = this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED;
+        this.setVelocityX(speed);
+        this.setFlipX(false);
+    }
+
+    stopMoveX(): void {
+        this.setVelocityX(0);
     }
 
     takeDamage(): boolean {

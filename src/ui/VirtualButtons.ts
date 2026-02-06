@@ -6,6 +6,15 @@ export class VirtualButtons {
     private jumpBtn!: Phaser.GameObjects.Container;
     private duckBtn!: Phaser.GameObjects.Container;
     private activateBtn!: Phaser.GameObjects.Container;
+    private joystickBase!: Phaser.GameObjects.Graphics;
+    private joystickKnob!: Phaser.GameObjects.Graphics;
+    private joystickActive = false;
+    private joystickPointerId: number | null = null;
+    private joystickCenterX = 0;
+    private joystickCenterY = 0;
+    private joystickRadius = 80;
+    private onJoystickMoveCallback: ((x: number, y: number) => void) | null = null;
+    private onJoystickReleaseCallback: (() => void) | null = null;
 
     constructor(scene: Scene) {
         this.scene = scene;
@@ -15,10 +24,105 @@ export class VirtualButtons {
         }
     }
 
-    private create(): void {
+private create(): void {
+        this.createJoystick();
         this.createJumpButton();
         this.createDuckButton();
         this.createActivateButton();
+    }
+
+    hasJoystick(): boolean {
+        return this.joystickBase !== undefined;
+    }
+
+    private createJoystick(): void {
+        const x = 120;
+        const y = this.scene.scale.height - 120;
+        this.joystickCenterX = x;
+        this.joystickCenterY = y;
+
+        // 摇杆底座
+        this.joystickBase = this.scene.add.graphics();
+        this.joystickBase.fillStyle(0xFFFFFF, 0.2);
+        this.joystickBase.fillCircle(x, y, this.joystickRadius);
+        this.joystickBase.lineStyle(3, 0xFFFFFF, 0.5);
+        this.joystickBase.strokeCircle(x, y, this.joystickRadius);
+
+        // 摇杆手柄
+        this.joystickKnob = this.scene.add.graphics();
+        this.joystickKnob.fillStyle(0xFFFFFF, 0.6);
+        this.joystickKnob.fillCircle(x, y, 35);
+        this.joystickKnob.lineStyle(3, 0xFFFFFF, 0.8);
+        this.joystickKnob.strokeCircle(x, y, 35);
+
+        // 设置交互区域
+        const hitArea = new Phaser.Geom.Circle(x, y, this.joystickRadius);
+        this.joystickBase.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+
+        // 触摸事件
+        this.joystickBase.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            this.joystickActive = true;
+            this.joystickPointerId = pointer.id;
+            this.updateJoystickPosition(pointer.x, pointer.y);
+        });
+
+        this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+            if (this.joystickActive && pointer.id === this.joystickPointerId) {
+                this.updateJoystickPosition(pointer.x, pointer.y);
+            }
+        });
+
+        this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+            if (pointer.id === this.joystickPointerId) {
+                this.resetJoystick();
+            }
+        });
+    }
+
+    private updateJoystickPosition(pointerX: number, pointerY: number): void {
+        const dx = pointerX - this.joystickCenterX;
+        const dy = pointerY - this.joystickCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDistance = this.joystickRadius - 35;
+        
+        let knobX = this.joystickCenterX;
+        let knobY = this.joystickCenterY;
+        let normalizedX = 0;
+        let normalizedY = 0;
+
+        if (distance > 0) {
+            const clampedDistance = Math.min(distance, maxDistance);
+            const angle = Math.atan2(dy, dx);
+            knobX = this.joystickCenterX + Math.cos(angle) * clampedDistance;
+            knobY = this.joystickCenterY + Math.sin(angle) * clampedDistance;
+            normalizedX = dx / distance;
+            normalizedY = dy / distance;
+        }
+
+        this.joystickKnob.setPosition(knobX, knobY);
+        
+        // 触发回调
+        if (this.onJoystickMoveCallback) {
+            this.onJoystickMoveCallback(normalizedX, normalizedY);
+        }
+    }
+
+    private resetJoystick(): void {
+        this.joystickActive = false;
+        this.joystickPointerId = null;
+        this.joystickKnob.setPosition(this.joystickCenterX, this.joystickCenterY);
+        
+        if (this.onJoystickReleaseCallback) {
+            this.onJoystickReleaseCallback();
+        }
+    }
+
+    onJoystickMove(callback: (x: number, y: number) => void): void {
+        this.onJoystickMoveCallback = callback;
+    }
+
+    onJoystickRelease(callback: () => void): void {
+        this.onJoystickReleaseCallback = callback;
     }
 
     private createJumpButton(): void {
@@ -103,5 +207,7 @@ export class VirtualButtons {
         this.jumpBtn?.destroy();
         this.duckBtn?.destroy();
         this.activateBtn?.destroy();
+        this.joystickBase?.destroy();
+        this.joystickKnob?.destroy();
     }
 }
