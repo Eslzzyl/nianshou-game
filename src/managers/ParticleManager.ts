@@ -19,8 +19,10 @@ export class ParticleManager {
     }
 
     init(scene: Scene): void {
+        this.destroy();
         this.scene = scene;
         this.isActive = true;
+        this.fireworkTimer = 0;
         this.createSnowEffect();
         this.createFireworksEffect();
     }
@@ -57,7 +59,7 @@ export class ParticleManager {
             lifespan: 10000,
             speedY: { min: 20, max: 50 },
             speedX: { min: -10, max: 10 },
-            scale: { min: 0.2, max: 0.6 },
+            scale: { min: 0.3, max: 1.0 },
             alpha: { start: 0.6, end: 0 },
             frequency: 200,
             reserve: STYLE.PARTICLES.SNOW_COUNT,
@@ -69,11 +71,11 @@ export class ParticleManager {
         if (!this.scene || !this.scene.textures.exists('p_gold')) return;
 
         this.fireworksEmitter = this.scene.add.particles(0, 0, 'p_gold', {
-            lifespan: { min: 600, max: 1200 },
-            speed: { min: 100, max: 250 },
-            scale: { start: 0.8, end: 0 },
+            lifespan: { min: 800, max: 1500 },
+            speed: { min: 150, max: 350 },
+            scale: { start: 1.5, end: 0 },
             alpha: { start: 1, end: 0 },
-            gravityY: 150,
+            gravityY: 120,
             blendMode: 'ADD',
             emitting: false,
         });
@@ -82,11 +84,15 @@ export class ParticleManager {
     spawnFirework(x: number, y: number): void {
         if (!this.fireworksEmitter) return;
 
-        const colors = [0xFF0000, 0xFFD700, 0xFF6B6B, 0xFFF8DC];
+        const colors = [
+            0xFF0000, 0xFFD700, 0xFF6B6B, 0xFFF8DC,
+            0xFF4500, 0x00FF7F, 0x1E90FF, 0xFF1493,
+            0x00CED1, 0xFFA500, 0x7B68EE, 0x32CD32
+        ];
         const color = colors[Math.floor(Math.random() * colors.length)];
 
         this.fireworksEmitter.setParticleTint(color);
-        this.fireworksEmitter.explode(40, x, y);
+        this.fireworksEmitter.explode(60, x, y);
 
         // 闪光效果只需一个 Graphics
         this.createFlash(x, y);
@@ -111,20 +117,20 @@ export class ParticleManager {
         if (!this.scene || !this.scene.textures.exists('p_gold')) return;
 
         const emitter = this.scene.add.particles(x, y, 'p_gold', {
-            speed: { min: 50, max: 100 },
-            scale: { start: 0.6, end: 0 },
+            speed: { min: 80, max: 150 },
+            scale: { start: 1.0, end: 0 },
             alpha: { start: 1, end: 0 },
-            lifespan: 500,
+            lifespan: 600,
             tint: color,
             emitting: false
         });
 
-        emitter.explode(12);
-        this.scene.time.delayedCall(600, () => emitter.destroy());
+        emitter.explode(18);
+        this.scene.time.delayedCall(700, () => emitter.destroy());
 
         const flash = this.scene.add.graphics();
         flash.fillStyle(0xFFF8DC, 0.6);
-        flash.fillCircle(0, 0, 15);
+        flash.fillCircle(0, 0, 20);
         flash.setPosition(x, y);
         this.scene.tweens.add({
             targets: flash,

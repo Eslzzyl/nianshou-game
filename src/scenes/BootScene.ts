@@ -38,14 +38,14 @@ export class BootScene extends Scene {
 
         // 白色圆点（雪花）
         graphics.fillStyle(0xFFFFFF, 1);
-        graphics.fillCircle(4, 4, 4);
-        graphics.generateTexture('p_white', 8, 8);
+        graphics.fillCircle(8, 8, 8);
+        graphics.generateTexture('p_white', 16, 16);
         graphics.clear();
 
         // 金色圆点
         graphics.fillStyle(0xFFD700, 1);
-        graphics.fillCircle(4, 4, 4);
-        graphics.generateTexture('p_gold', 8, 8);
+        graphics.fillCircle(8, 8, 8);
+        graphics.generateTexture('p_gold', 16, 16);
         graphics.clear();
 
         graphics.destroy();

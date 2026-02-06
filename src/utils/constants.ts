@@ -88,7 +88,7 @@ export const STYLE = {
     // 粒子效果
     PARTICLES: {
         SNOW_COUNT: 50,
-        FIREWORK_INTERVAL: 5000,
+        FIREWORK_INTERVAL: 2000,
         GLOW_PULSE_SPEED: 1500,
         FLOAT_AMPLITUDE: 8,
     },
