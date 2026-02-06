@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { AudioManager } from '../managers/AudioManager.js';
+import { UIComponents } from '../ui/UIComponents.js';
 
 export class PauseScene extends Scene {
     constructor() {
@@ -12,74 +12,65 @@ export class PauseScene extends Scene {
     }
 
     private createOverlay(): void {
+        // 半透明遮罩
         const overlay = this.add.rectangle(
             this.scale.width / 2,
             this.scale.height / 2,
             this.scale.width,
             this.scale.height,
             0x000000,
-            0.7
+            0.75
         );
-        
+
         overlay.setInteractive();
     }
 
     private createMenu(): void {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
-        
-        this.add.rectangle(centerX, centerY, 400, 350, 0x333333, 0.95);
-        this.add.rectangle(centerX, centerY, 400, 350, 0x000000, 0).setStrokeStyle(3, 0xFFD700);
-        
-        this.add.text(centerX, centerY - 130, '游戏暂停', {
+
+        // 使用卷轴面板
+        UIComponents.createScrollPanel(this, centerX, centerY, 420, 400);
+
+        // 标题
+        this.add.text(centerX, centerY - 160, '⏸️ 游戏暂停', {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
         }).setOrigin(0.5);
-        
-        this.createButton(centerX, centerY - 50, '继续游戏', () => {
-            this.resumeGame();
-        });
-        
-        this.createButton(centerX, centerY + 30, '重新开始', () => {
-            this.restartGame();
-        });
-        
-        this.createButton(centerX, centerY + 110, '返回菜单', () => {
-            this.returnToMenu();
-        });
-    }
 
-    private createButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Container {
-        const container = this.add.container(x, y);
-        
-        const bg = this.add.rectangle(0, 0, 250, 50, 0x8B0000);
-        bg.setStrokeStyle(2, 0xFFD700);
-        bg.setInteractive({ useHandCursor: true });
-        
-        const label = this.add.text(0, 0, text, {
-            fontSize: '24px',
-            color: '#FFFFFF',
+        // 按钮
+        UIComponents.createModernButton(
+            this,
+            centerX,
+            centerY - 60,
+            '▶️ 继续游戏',
+            () => this.resumeGame()
+        );
+
+        UIComponents.createModernButton(
+            this,
+            centerX,
+            centerY + 40,
+            '🔄 重新开始',
+            () => this.restartGame()
+        );
+
+        UIComponents.createModernButton(
+            this,
+            centerX,
+            centerY + 140,
+            '🏠 返回菜单',
+            () => this.returnToMenu()
+        );
+
+        // 提示文字
+        this.add.text(centerX, centerY + 200, '按 ESC 继续游戏', {
+            fontSize: '14px',
+            color: '#666666',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
         }).setOrigin(0.5);
-        
-        container.add([bg, label]);
-        
-        bg.on('pointerover', () => {
-            bg.setFillStyle(0xA52A2A);
-            container.setScale(1.05);
-        });
-        
-        bg.on('pointerout', () => {
-            bg.setFillStyle(0x8B0000);
-            container.setScale(1);
-        });
-        
-        bg.on('pointerdown', () => {
-            AudioManager.getInstance().play('collect_fu');
-            callback();
-        });
-        
-        return container;
     }
 
     private resumeGame(): void {
@@ -92,7 +83,7 @@ export class PauseScene extends Scene {
         this.scene.stop();
         const gameScene = this.scene.get('GameScene');
         const bossScene = this.scene.get('BossScene');
-        
+
         if (gameScene.scene.isActive()) {
             gameScene.scene.restart();
         } else if (bossScene.scene.isActive()) {

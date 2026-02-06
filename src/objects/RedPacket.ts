@@ -1,8 +1,8 @@
 import type { Scene } from 'phaser';
-import { Item } from './Item.js';
 import { AudioManager } from '../managers/AudioManager.js';
-import { ScoreManager } from '../managers/ScoreManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
+import { Item } from './Item.js';
 
 export class RedPacket extends Item {
     constructor(scene: Scene, x: number, y: number) {
@@ -11,24 +11,33 @@ export class RedPacket extends Item {
     }
 
     private createAnimation(): void {
-        if (!this.scene.anims.exists('redpacket_glow')) {
-            this.scene.anims.create({
-                key: 'redpacket_glow',
-                frames: [{ key: 'redpacket', frame: 0 }],
-                frameRate: 4,
-                repeat: -1,
-            });
+        const anims = this.scene.anims;
+        const textures = this.scene.textures;
+
+        if (!anims.exists('redpacket_glow') && textures.exists('redpacket')) {
+            try {
+                anims.create({
+                    key: 'redpacket_glow',
+                    frames: [{ key: 'redpacket', frame: 0 }],
+                    frameRate: 4,
+                    repeat: -1,
+                });
+            } catch (e) {
+                console.warn('无法创建红包动画:', e);
+            }
         }
-        
-        this.play('redpacket_glow');
+
+        if (anims.exists('redpacket_glow')) {
+            this.play('redpacket_glow');
+        }
     }
 
     protected onCollect(): void {
         ScoreManager.getInstance().addRedPacket();
         SaveManager.getInstance().addStat('totalRedPackets', 1);
-        
+
         AudioManager.getInstance().play('collect_packet');
-        
+
         this.showPacketPopup();
     }
 
@@ -38,7 +47,7 @@ export class RedPacket extends Item {
             color: '#FF0000',
             fontStyle: 'bold',
         });
-        
+
         this.scene.tweens.add({
             targets: text,
             y: this.y - 50,

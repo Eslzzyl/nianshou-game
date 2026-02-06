@@ -1,7 +1,9 @@
 import { Scene } from 'phaser';
-import { AudioManager } from '../managers/AudioManager.js';
+import { ParticleManager } from '../managers/ParticleManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
+import { UIComponents } from '../ui/UIComponents.js';
+import { COLORS, STYLE } from '../utils/constants.js';
 import type { Achievement } from '../types/index.js';
 
 interface VictoryData {
@@ -20,167 +22,195 @@ export class VictoryScene extends Scene {
     }
 
     create(): void {
+        ParticleManager.getInstance().init(this);
+
         this.createBackground();
         this.createVictoryText();
         this.createStats();
         this.createAchievements();
         this.createButtons();
-        
+        this.createDecorations();
+
         this.input.keyboard?.on('keydown-SPACE', () => this.returnToMenu());
         this.input.keyboard?.on('keydown-ENTER', () => this.returnToMenu());
     }
 
+    update(_time: number, delta: number): void {
+        ParticleManager.getInstance().update(delta);
+    }
+
     private createBackground(): void {
-        const bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'bg_palace');
-        bg.setDisplaySize(this.scale.width, this.scale.height);
-        
-        this.add.rectangle(
-            this.scale.width / 2,
-            this.scale.height / 2,
-            this.scale.width,
-            this.scale.height,
-            0x000000,
-            0.5
-        );
-        
+        // 渐变背景
+        const bg = this.add.graphics();
+        for (let y = 0; y < this.scale.height; y++) {
+            const ratio = y / this.scale.height;
+            const r = Math.floor(40 + ratio * 40);
+            const g = Math.floor(20 + ratio * 20);
+            const b = Math.floor(60 + ratio * 40);
+            bg.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1);
+            bg.fillRect(0, y, this.scale.width, 1);
+        }
+
+        // 背景图片
+        if (this.textures.exists('bg_palace')) {
+            const bgImage = this.add.image(this.scale.width / 2, this.scale.height / 2, 'bg_palace');
+            bgImage.setDisplaySize(this.scale.width, this.scale.height);
+            bgImage.setAlpha(0.4);
+        }
+
+        // 庆祝烟花
         this.createFireworks();
     }
 
     private createFireworks(): void {
         for (let i = 0; i < 5; i++) {
-            this.time.delayedCall(i * 500, () => {
-                this.spawnFirework();
+            this.time.delayedCall(i * 400, () => {
+                const x = 150 + Math.random() * (this.scale.width - 300);
+                const y = 80 + Math.random() * 250;
+                ParticleManager.getInstance().spawnFirework(x, y);
             });
         }
-        
+
         this.time.addEvent({
-            delay: 2000,
-            callback: () => this.spawnFirework(),
+            delay: 1800,
+            callback: () => {
+                const x = 150 + Math.random() * (this.scale.width - 300);
+                const y = 80 + Math.random() * 250;
+                ParticleManager.getInstance().spawnFirework(x, y);
+            },
             callbackScope: this,
             loop: true,
         });
     }
 
-    private spawnFirework(): void {
-        const x = 200 + Math.random() * (this.scale.width - 400);
-        const y = 100 + Math.random() * 300;
-        
-        const colors = [0xFF0000, 0xFFD700, 0x00FF00, 0x00FFFF, 0xFF00FF];
-        
-        for (let i = 0; i < 20; i++) {
-            const particle = this.add.circle(x, y, 4, colors[Math.floor(Math.random() * colors.length)]);
-            
-            const angle = (i / 20) * Math.PI * 2;
-            const speed = 100 + Math.random() * 100;
-            
-            this.tweens.add({
-                targets: particle,
-                x: x + Math.cos(angle) * speed,
-                y: y + Math.sin(angle) * speed,
-                alpha: 0,
-                duration: 1000,
-                onComplete: () => particle.destroy(),
-            });
-        }
-    }
-
     private createVictoryText(): void {
-        const text = this.add.text(this.scale.width / 2, 120, '🎉 通关成功! 🎉', {
-            fontSize: '56px',
+        const centerX = this.scale.width / 2;
+
+        // 发光层
+        const glow = this.add.text(centerX, 130, '🎉 通关成功! 🎉', {
+            fontSize: '64px',
             color: '#FFD700',
             fontStyle: 'bold',
-            stroke: '#8B0000',
-            strokeThickness: 8,
+            fontFamily: STYLE.FONT.FAMILY,
         }).setOrigin(0.5);
-        
+        glow.setStroke('#FFD700', 10);
+        glow.setAlpha(0.3);
+
+        // 主文字
+        const text = this.add.text(centerX, 130, '🎉 通关成功! 🎉', {
+            fontSize: '64px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+        }).setOrigin(0.5);
+        text.setStroke('#8B0000', 6);
+
+        // 脉冲动画
         this.tweens.add({
-            targets: text,
-            scale: 1.1,
-            duration: 600,
+            targets: [glow, text],
+            scale: 1.08,
+            duration: 800,
             yoyo: true,
             repeat: -1,
+            ease: 'Sine.easeInOut',
         });
-        
-        this.add.text(this.scale.width / 2, 200, '福气已成功送达！', {
-            fontSize: '28px',
+
+        // 副标题
+        this.add.text(centerX, 210, '福气已成功送达！', {
+            fontSize: '26px',
             color: '#FFFFFF',
+            fontFamily: STYLE.FONT.FAMILY,
         }).setOrigin(0.5);
     }
 
     private createStats(): void {
-        const yOffset = 280;
+        const centerX = this.scale.width / 2;
+        const yOffset = 300;
         const score = ScoreManager.getInstance().getScore();
-        
-        this.add.text(this.scale.width / 2, yOffset, `最终分数: ${score}`, {
+
+        // 分数面板
+        UIComponents.createScrollPanel(this, centerX, yOffset + 30, 350, 120);
+
+        this.add.text(centerX, yOffset, `🏆 最终分数: ${score}`, {
             fontSize: '32px',
             color: '#FFD700',
             fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
         }).setOrigin(0.5);
-        
+
         const highScore = SaveManager.getInstance().getHighScore();
         if (score >= highScore) {
-            this.add.text(this.scale.width / 2, yOffset + 45, '⭐ 新纪录! ⭐', {
+            this.add.text(centerX, yOffset + 55, '⭐ 新纪录! ⭐', {
                 fontSize: '24px',
-                color: '#FFD700',
+                color: '#FF6B35',
+                fontStyle: 'bold',
+                fontFamily: STYLE.FONT.FAMILY,
             }).setOrigin(0.5);
         }
     }
 
     private createAchievements(): void {
         if (this.newAchievements.length === 0) return;
-        
-        const yOffset = 380;
-        
-        this.add.text(this.scale.width / 2, yOffset, '新解锁成就:', {
-            fontSize: '24px',
+
+        const centerX = this.scale.width / 2;
+        const yOffset = 430;
+
+        this.add.text(centerX, yOffset, '✨ 新解锁成就', {
+            fontSize: '22px',
             color: '#AAAAAA',
+            fontFamily: STYLE.FONT.FAMILY,
         }).setOrigin(0.5);
-        
+
         let achievementY = yOffset + 40;
         for (const achievement of this.newAchievements) {
-            this.add.text(this.scale.width / 2, achievementY, `🏆 ${achievement.name}`, {
-                fontSize: '20px',
+            this.add.text(centerX, achievementY, `🏅 ${achievement.name}`, {
+                fontSize: '18px',
                 color: '#FFD700',
+                fontFamily: STYLE.FONT.FAMILY,
             }).setOrigin(0.5);
-            achievementY += 30;
+            achievementY += 32;
         }
     }
 
     private createButtons(): void {
-        this.createButton(this.scale.width / 2, 550, '返回主菜单', () => this.returnToMenu());
+        UIComponents.createModernButton(
+            this,
+            this.scale.width / 2,
+            580,
+            '🏠 返回主菜单',
+            () => this.returnToMenu(),
+            { width: 300 }
+        );
     }
 
-    private createButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Container {
+    private createDecorations(): void {
+        // 两侧灯笼
+        this.createLantern(100, 120);
+        this.createLantern(this.scale.width - 100, 120);
+    }
+
+    private createLantern(x: number, y: number): void {
         const container = this.add.container(x, y);
-        
-        const bg = this.add.rectangle(0, 0, 250, 60, 0xFFD700);
-        bg.setStrokeStyle(3, 0x8B0000);
-        bg.setInteractive({ useHandCursor: true });
-        
-        const label = this.add.text(0, 0, text, {
-            fontSize: '26px',
-            color: '#8B0000',
-            fontStyle: 'bold',
-        }).setOrigin(0.5);
-        
-        container.add([bg, label]);
-        
-        bg.on('pointerover', () => {
-            bg.setFillStyle(0xFFE135);
-            container.setScale(1.05);
+
+        const lantern = this.add.graphics();
+        lantern.fillStyle(COLORS.RED_PRIMARY, 1);
+        lantern.fillEllipse(0, 20, 45, 55);
+        lantern.fillStyle(COLORS.GOLD_PRIMARY, 0.5);
+        lantern.fillEllipse(0, 20, 30, 38);
+        lantern.fillStyle(COLORS.GOLD_PRIMARY, 1);
+        lantern.fillRect(-3, -15, 6, 12);
+
+        container.add(lantern);
+
+        // 摇摆动画
+        this.tweens.add({
+            targets: container,
+            angle: { from: -5, to: 5 },
+            duration: 2000 + Math.random() * 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
         });
-        
-        bg.on('pointerout', () => {
-            bg.setFillStyle(0xFFD700);
-            container.setScale(1);
-        });
-        
-        bg.on('pointerdown', () => {
-            AudioManager.getInstance().play('collect_fu');
-            callback();
-        });
-        
-        return container;
     }
 
     private returnToMenu(): void {

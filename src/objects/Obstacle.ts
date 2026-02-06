@@ -6,10 +6,10 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene: Scene, x: number, y: number, texture: string) {
         super(scene, x, y, texture);
-        
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
         this.setImmovable(true);
         if (this.body) {
             (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
@@ -18,7 +18,8 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
 
     update(scrollSpeed: number, dt: number): void {
         this.x -= scrollSpeed * dt;
-        
+        this.x = Math.floor(this.x);
+
         if (this.x < -100) {
             this.destroy();
         }

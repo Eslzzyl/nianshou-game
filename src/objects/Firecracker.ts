@@ -1,6 +1,6 @@
 import type { Scene } from 'phaser';
-import { Obstacle } from './Obstacle.js';
 import type { FirecrackerConfig } from '../types/index.js';
+import { Obstacle } from './Obstacle.js';
 
 export class Firecracker extends Obstacle {
     private config: FirecrackerConfig;
@@ -9,7 +9,7 @@ export class Firecracker extends Obstacle {
 
     constructor(scene: Scene, x: number, y: number, config: Partial<FirecrackerConfig> = {}) {
         super(scene, x, y, 'firecracker');
-        
+
         this.config = {
             type: 'ground',
             movePattern: 'static',
@@ -17,13 +17,13 @@ export class Firecracker extends Obstacle {
             warningTime: 500,
             ...config,
         };
-        
+
         this.damage = this.config.damage;
         this.startTime = Date.now();
-        
+
         this.setupPhysics();
         this.createAnimations();
-        
+
         if (this.config.warningTime > 0) {
             this.showWarning();
         }
@@ -40,7 +40,7 @@ export class Firecracker extends Obstacle {
 
     private createAnimations(): void {
         const anims = this.scene.anims;
-        
+
         if (!anims.exists('firecracker_idle')) {
             const frames = this.getAnimationFrames('firecracker', 4);
             if (frames.length > 0) {
@@ -56,7 +56,7 @@ export class Firecracker extends Obstacle {
                 }
             }
         }
-        
+
         if (anims.exists('firecracker_idle')) {
             try {
                 this.play('firecracker_idle');
@@ -70,18 +70,18 @@ export class Firecracker extends Obstacle {
         if (!this.scene.textures.exists(key)) {
             return [];
         }
-        
+
         const texture = this.scene.textures.get(key);
         const frameCount = texture.frameTotal;
         const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-        
+
         for (let i = 0; i < Math.min(maxFrames, frameCount); i++) {
             frames.push({
                 key: key,
                 frame: i,
             } as Phaser.Types.Animations.AnimationFrame);
         }
-        
+
         return frames;
     }
 
@@ -90,7 +90,7 @@ export class Firecracker extends Obstacle {
         this.warningSprite.setTint(0xFFFF00);
         this.warningSprite.setAlpha(0.5);
         this.warningSprite.setScale(0.5);
-        
+
         this.scene.tweens.add({
             targets: this.warningSprite,
             alpha: 0,
@@ -100,12 +100,12 @@ export class Firecracker extends Obstacle {
                 this.warningSprite = undefined;
             },
         });
-        
+
         this.setVisible(false);
         if (this.body) {
             this.body.enable = false;
         }
-        
+
         this.scene.time.delayedCall(this.config.warningTime, () => {
             this.setVisible(true);
             if (this.body) {
@@ -116,17 +116,18 @@ export class Firecracker extends Obstacle {
 
     update(scrollSpeed: number, dt: number): void {
         const elapsed = Date.now() - this.startTime;
+
+        // 始终更新位置，即使在预警期
+        super.update(scrollSpeed, dt);
+
         if (elapsed < this.config.warningTime) {
             if (this.warningSprite) {
                 this.warningSprite.x = this.x;
             }
-            return;
-        }
-        
-        super.update(scrollSpeed, dt);
-        
-        if (this.config.movePattern === 'bounce' && this.config.type === 'air') {
-            this.y += Math.sin(elapsed * 0.003) * 2;
+        } else {
+            if (this.config.movePattern === 'bounce' && this.config.type === 'air') {
+                this.y += Math.sin(elapsed * 0.003) * 2;
+            }
         }
     }
 

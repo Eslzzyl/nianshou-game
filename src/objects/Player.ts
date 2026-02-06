@@ -1,8 +1,8 @@
 import type { Scene } from 'phaser';
-import type { PlayerState } from '../types/index.js';
-import { PLAYER } from '../utils/constants.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
+import type { PlayerState } from '../types/index.js';
+import { PLAYER } from '../utils/constants.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     private currentState: PlayerState = 'RUNNING';
@@ -11,24 +11,24 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private invincibleTimer = 0;
     private flyTimer = 0;
     private wingSprite?: Phaser.GameObjects.Sprite;
-    
+
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'nianshou_run');
-        
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
+        const body = this.body as Phaser.Physics.Arcade.Body;
         this.setCollideWorldBounds(true);
         this.setGravityY(PLAYER.GRAVITY);
-        this.setSize(PLAYER.WIDTH, PLAYER.HEIGHT);
-        this.setOffset(0, 0);
-        
+        body.setSize(PLAYER.WIDTH, PLAYER.HEIGHT, true);
+
         this.createAnimations();
     }
 
     private createAnimations(): void {
         const anims = this.scene.anims;
-        
+
         // 奔跑动画
         if (!anims.exists('run')) {
             const frames = this.getAnimationFrames('nianshou_run', 4);
@@ -45,7 +45,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        
+
         // 跳跃动画
         if (!anims.exists('jump')) {
             const frames = this.getAnimationFrames('nianshou_jump', 1);
@@ -61,7 +61,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        
+
         // 下蹲动画
         if (!anims.exists('duck')) {
             const frames = this.getAnimationFrames('nianshou_duck', 2);
@@ -77,7 +77,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        
+
         // 受伤动画
         if (!anims.exists('hurt')) {
             const frames = this.getAnimationFrames('nianshou_hurt', 2);
@@ -94,7 +94,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        
+
         // 安全地播放动画
         this.safePlay('run');
     }
@@ -103,12 +103,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (!this.scene.textures.exists(key)) {
             return [];
         }
-        
+
         const texture = this.scene.textures.get(key);
         // frameTotal 包含帧数（单帧图片为1）
         const frameCount = texture.frameTotal;
         const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-        
+
         // 只使用实际存在的帧
         for (let i = 0; i < Math.min(maxFrames, frameCount); i++) {
             frames.push({
@@ -116,7 +116,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 frame: i,
             } as Phaser.Types.Animations.AnimationFrame);
         }
-        
+
         return frames;
     }
 
@@ -132,13 +132,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     update(delta: number): void {
         this.grounded = this.body?.touching.down || false;
-        
+
         if (this.grounded) {
             this.coyoteTimer = PLAYER.COYOTE_TIME;
         } else {
             this.coyoteTimer = Math.max(0, this.coyoteTimer - delta);
         }
-        
+
         if (this.currentState === 'INVINCIBLE') {
             this.invincibleTimer -= delta;
             if (this.invincibleTimer <= 0) {
@@ -148,14 +148,20 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.setTint(0xFFD700);
             }
         }
-        
+
         if (this.currentState === 'FLYING') {
             this.flyTimer -= delta;
             if (this.flyTimer <= 0) {
                 this.deactivateFly();
+            } else {
+                // 飞行模式下的平滑悬浮
+                this.y += Math.sin(Date.now() * 0.005) * 1.2;
+                if (this.wingSprite) {
+                    this.wingSprite.setPosition(this.x, this.y - 10);
+                }
             }
         }
-        
+
         this.handleStateAnimation();
     }
 
@@ -186,8 +192,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     jump(): boolean {
-        if (this.currentState === 'FLYING') return false;
-        
+        if (this.currentState === 'FLYING') {
+            this.setVelocityY(-350);
+            return true;
+        }
+
         if (this.coyoteTimer > 0 || this.grounded) {
             this.setVelocityY(PLAYER.JUMP_VELOCITY);
             this.setPlayerState('JUMPING');
@@ -200,7 +209,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     duck(): void {
         if (this.currentState === 'FLYING') return;
-        
+
         if (this.grounded && this.currentState !== 'DUCKING') {
             this.setPlayerState('DUCKING');
             this.setSize(PLAYER.WIDTH, PLAYER.DUCK_HEIGHT);
@@ -220,26 +229,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.currentState === 'INVINCIBLE' || this.currentState === 'FLYING') {
             return false;
         }
-        
+
         ScoreManager.getInstance().takeDamage();
         AudioManager.getInstance().play('hurt');
-        
+
         if (ScoreManager.getInstance().isDead()) {
             return true;
         }
-        
+
         this.setPlayerState('HURT');
         if (this.scene.anims.exists('hurt')) {
             this.safePlay('hurt');
         }
         this.setVelocityY(-200);
-        
+
         this.scene.time.delayedCall(500, () => {
             if (this.currentState === 'HURT') {
                 this.setPlayerState('RUNNING');
             }
         });
-        
+
         return true;
     }
 
@@ -256,14 +265,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.flyTimer = PLAYER.FLY_DURATION;
         this.setGravityY(0);
         this.setVelocityY(0);
-        
+
         if (this.scene.textures.exists('spring_word')) {
             this.wingSprite = this.scene.add.sprite(this.x, this.y, 'spring_word');
             if (this.scene.anims.exists('spring_spin')) {
                 this.wingSprite.play('spring_spin');
             }
         }
-        
+
         AudioManager.getInstance().play('powerup');
     }
 

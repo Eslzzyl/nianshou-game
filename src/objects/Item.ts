@@ -1,5 +1,5 @@
 import type { Scene } from 'phaser';
-import type { ItemType, ItemConfig } from '../types/index.js';
+import type { ItemConfig, ItemType } from '../types/index.js';
 import { ITEMS } from '../utils/constants.js';
 
 export abstract class Item extends Phaser.Physics.Arcade.Sprite {
@@ -9,18 +9,18 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene: Scene, x: number, y: number, texture: string, type: ItemType) {
         super(scene, x, y, texture);
-        
+
         this.itemType = type;
         this.config = this.getConfig();
-        
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
         if (this.body) {
             (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
         }
         this.setSize(40, 40);
-        
+
         this.createFloatAnimation();
     }
 
@@ -54,7 +54,10 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
 
     update(scrollSpeed: number, dt: number): void {
         this.x -= scrollSpeed * dt;
-        
+
+        // 使用整数坐标可以减少亚像素模糊引起的闪烁
+        this.x = Math.floor(this.x);
+
         if (this.x < -50) {
             this.destroy();
         }
@@ -63,14 +66,19 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
     collect(): void {
         if (this.collected) return;
         this.collected = true;
-        
+
+        // 停止之前的浮动动画
+        this.scene.tweens.killTweensOf(this);
+
         this.onCollect();
-        
+
         this.scene.tweens.add({
             targets: this,
             scale: 1.5,
             alpha: 0,
-            duration: 200,
+            y: this.y - 50,
+            duration: 250,
+            ease: 'Back.easeIn',
             onComplete: () => this.destroy(),
         });
     }

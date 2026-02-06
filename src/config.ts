@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT } from './utils/constants.js';
+import { GAME_HEIGHT, GAME_WIDTH } from './utils/constants.js';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -14,11 +14,17 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
         },
     },
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.EXPAND,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
+        expandParent: true,
     },
     render: {
         pixelArt: false,
         antialias: true,
+        antialiasGL: true,
+        roundPixels: true,
+        powerPreference: 'high-performance',
     },
 };
