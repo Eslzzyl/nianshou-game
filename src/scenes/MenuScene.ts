@@ -93,16 +93,6 @@ export class MenuScene extends Scene {
         }).setOrigin(0.5);
         title.setStroke('#8B0000', 6);
 
-        // 标题呼吸动画
-        this.tweens.add({
-            targets: [glow, title],
-            scale: 1.03,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut',
-        });
-
         // 副标题
         this.add.text(centerX, 220, '🧧 帮助年兽躲避爆竹，收集福气！ 🧧', {
             fontSize: '22px',

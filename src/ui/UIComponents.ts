@@ -239,14 +239,18 @@ export class UIComponents {
     ): void {
         const r = STYLE.BUTTON.CORNER_RADIUS;
 
-        // 主背景
+        // 主背景 - 使用标准圆角矩形
         graphics.fillStyle(color, 1);
         graphics.beginPath();
         graphics.moveTo(-width / 2 + r, -height / 2);
         graphics.lineTo(width / 2 - r, -height / 2);
-        graphics.arc(width / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+        graphics.arc(width / 2 - r, -height / 2 + r, r, -Math.PI / 2, 0);
+        graphics.lineTo(width / 2, height / 2 - r);
+        graphics.arc(width / 2 - r, height / 2 - r, r, 0, Math.PI / 2);
         graphics.lineTo(-width / 2 + r, height / 2);
-        graphics.arc(-width / 2 + r, 0, r, Math.PI / 2, -Math.PI / 2);
+        graphics.arc(-width / 2 + r, height / 2 - r, r, Math.PI / 2, Math.PI);
+        graphics.lineTo(-width / 2, -height / 2 + r);
+        graphics.arc(-width / 2 + r, -height / 2 + r, r, Math.PI, -Math.PI / 2);
         graphics.closePath();
         graphics.fillPath();
 
@@ -255,10 +259,11 @@ export class UIComponents {
         graphics.beginPath();
         graphics.moveTo(-width / 2 + r, -height / 2);
         graphics.lineTo(width / 2 - r, -height / 2);
-        graphics.arc(width / 2 - r, 0, r, -Math.PI / 2, 0);
+        graphics.arc(width / 2 - r, -height / 2 + r, r, -Math.PI / 2, 0);
         graphics.lineTo(width / 2, -height / 4);
         graphics.lineTo(-width / 2, -height / 4);
-        graphics.lineTo(-width / 2 + r, -height / 2);
+        graphics.lineTo(-width / 2, -height / 2 + r);
+        graphics.arc(-width / 2 + r, -height / 2 + r, r, Math.PI, -Math.PI / 2);
         graphics.closePath();
         graphics.fillPath();
     }
@@ -278,9 +283,13 @@ export class UIComponents {
         graphics.beginPath();
         graphics.moveTo(-width / 2 + r, -height / 2);
         graphics.lineTo(width / 2 - r, -height / 2);
-        graphics.arc(width / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+        graphics.arc(width / 2 - r, -height / 2 + r, r, -Math.PI / 2, 0);
+        graphics.lineTo(width / 2, height / 2 - r);
+        graphics.arc(width / 2 - r, height / 2 - r, r, 0, Math.PI / 2);
         graphics.lineTo(-width / 2 + r, height / 2);
-        graphics.arc(-width / 2 + r, 0, r, Math.PI / 2, -Math.PI / 2);
+        graphics.arc(-width / 2 + r, height / 2 - r, r, Math.PI / 2, Math.PI);
+        graphics.lineTo(-width / 2, -height / 2 + r);
+        graphics.arc(-width / 2 + r, -height / 2 + r, r, Math.PI, -Math.PI / 2);
         graphics.closePath();
         graphics.strokePath();
     }
@@ -301,9 +310,13 @@ export class UIComponents {
         graphics.beginPath();
         graphics.moveTo(-w / 2 + r, -h / 2);
         graphics.lineTo(w / 2 - r, -h / 2);
-        graphics.arc(w / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+        graphics.arc(w / 2 - r, -h / 2 + r, r, -Math.PI / 2, 0);
+        graphics.lineTo(w / 2, h / 2 - r);
+        graphics.arc(w / 2 - r, h / 2 - r, r, 0, Math.PI / 2);
         graphics.lineTo(-w / 2 + r, h / 2);
-        graphics.arc(-w / 2 + r, 0, r, Math.PI / 2, -Math.PI / 2);
+        graphics.arc(-w / 2 + r, h / 2 - r, r, Math.PI / 2, Math.PI);
+        graphics.lineTo(-w / 2, -h / 2 + r);
+        graphics.arc(-w / 2 + r, -h / 2 + r, r, Math.PI, -Math.PI / 2);
         graphics.closePath();
         graphics.fillPath();
     }
