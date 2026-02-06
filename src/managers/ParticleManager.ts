@@ -42,11 +42,9 @@ export class ParticleManager {
         this.fireworkTimer += delta;
         if (this.fireworkTimer > STYLE.PARTICLES.FIREWORK_INTERVAL) {
             this.fireworkTimer = 0;
-            if (Math.random() > 0.5) {
-                const x = 100 + Math.random() * (this.scene.scale.width - 200);
-                const y = 50 + Math.random() * 200;
-                this.spawnFirework(x, y);
-            }
+            const x = 100 + Math.random() * (this.scene.scale.width - 200);
+            const y = 50 + Math.random() * 200;
+            this.spawnFirework(x, y);
         }
     }
 
@@ -79,6 +77,7 @@ export class ParticleManager {
             blendMode: 'ADD',
             emitting: false,
         });
+        this.fireworksEmitter.setDepth(50);
     }
 
     spawnFirework(x: number, y: number): void {
@@ -94,7 +93,6 @@ export class ParticleManager {
         this.fireworksEmitter.setParticleTint(color);
         this.fireworksEmitter.explode(60, x, y);
 
-        // 闪光效果只需一个 Graphics
         this.createFlash(x, y);
     }
 
