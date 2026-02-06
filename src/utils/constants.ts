@@ -3,6 +3,10 @@ import type { Achievement, LevelConfig, ParallaxLayer } from '../types/index.js'
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
+// HiDPI text resolution (DPI). Used to keep Canvas-rendered fonts crisp on Retina / 3K displays.
+// Keep capped for performance; increase the cap if you explicitly prefer maximum sharpness.
+export const UI_RESOLUTION = Math.min(window.devicePixelRatio || 1, 2);
+
 // ==================== 现代春节配色方案 ====================
 export const COLORS = {
     // 主色调 - 现代春节红

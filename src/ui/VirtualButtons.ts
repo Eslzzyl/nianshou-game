@@ -1,4 +1,5 @@
 import type { Scene } from 'phaser';
+import { UI_RESOLUTION } from '../utils/constants.js';
 import { isMobile } from '../utils/helpers.js';
 
 export class VirtualButtons {
@@ -18,13 +19,13 @@ export class VirtualButtons {
 
     constructor(scene: Scene) {
         this.scene = scene;
-        
+
         if (isMobile()) {
             this.create();
         }
     }
 
-private create(): void {
+    private create(): void {
         this.createJoystick();
         this.createJumpButton();
         this.createDuckButton();
@@ -84,7 +85,7 @@ private create(): void {
         const dy = pointerY - this.joystickCenterY;
         const distance = Math.sqrt(dx * dx + dy * dy);
         const maxDistance = this.joystickRadius - 35;
-        
+
         let knobX = this.joystickCenterX;
         let knobY = this.joystickCenterY;
         let normalizedX = 0;
@@ -100,7 +101,7 @@ private create(): void {
         }
 
         this.joystickKnob.setPosition(knobX, knobY);
-        
+
         // 触发回调
         if (this.onJoystickMoveCallback) {
             this.onJoystickMoveCallback(normalizedX, normalizedY);
@@ -111,7 +112,7 @@ private create(): void {
         this.joystickActive = false;
         this.joystickPointerId = null;
         this.joystickKnob.setPosition(this.joystickCenterX, this.joystickCenterY);
-        
+
         if (this.onJoystickReleaseCallback) {
             this.onJoystickReleaseCallback();
         }
@@ -128,25 +129,26 @@ private create(): void {
     private createJumpButton(): void {
         const x = 100;
         const y = this.scene.scale.height - 100;
-        
+
         this.jumpBtn = this.scene.add.container(x, y);
-        
+
         const bg = this.scene.add.circle(0, 0, 60, 0xFFFFFF, 0.3);
         bg.setStrokeStyle(3, 0xFFFFFF);
-        
+
         const icon = this.scene.add.text(0, 0, '⬆️', {
             fontSize: '36px',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
-        
+
         this.jumpBtn.add([bg, icon]);
-        
+
         const hitArea = new Phaser.Geom.Circle(0, 0, 60);
         bg.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-        
+
         bg.on('pointerdown', () => {
             bg.setFillStyle(0xFFFFFF, 0.5);
         });
-        
+
         bg.on('pointerup', () => {
             bg.setFillStyle(0xFFFFFF, 0.3);
         });
@@ -155,25 +157,26 @@ private create(): void {
     private createDuckButton(): void {
         const x = this.scene.scale.width - 100;
         const y = this.scene.scale.height - 100;
-        
+
         this.duckBtn = this.scene.add.container(x, y);
-        
+
         const bg = this.scene.add.circle(0, 0, 60, 0xFFFFFF, 0.3);
         bg.setStrokeStyle(3, 0xFFFFFF);
-        
+
         const icon = this.scene.add.text(0, 0, '⬇️', {
             fontSize: '36px',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
-        
+
         this.duckBtn.add([bg, icon]);
-        
+
         const hitArea = new Phaser.Geom.Circle(0, 0, 60);
         bg.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-        
+
         bg.on('pointerdown', () => {
             bg.setFillStyle(0xFFFFFF, 0.5);
         });
-        
+
         bg.on('pointerup', () => {
             bg.setFillStyle(0xFFFFFF, 0.3);
         });
@@ -182,19 +185,20 @@ private create(): void {
     private createActivateButton(): void {
         const x = this.scene.scale.width / 2;
         const y = this.scene.scale.height - 180;
-        
+
         this.activateBtn = this.scene.add.container(x, y);
         this.activateBtn.setVisible(false);
-        
+
         const bg = this.scene.add.circle(0, 0, 50, 0xFFD700, 0.5);
         bg.setStrokeStyle(3, 0xFFD700);
-        
+
         const icon = this.scene.add.text(0, 0, '✨', {
             fontSize: '32px',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
-        
+
         this.activateBtn.add([bg, icon]);
-        
+
         const hitArea = new Phaser.Geom.Circle(0, 0, 50);
         bg.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
     }

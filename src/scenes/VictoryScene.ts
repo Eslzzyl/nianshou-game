@@ -1,10 +1,10 @@
 import { Scene } from 'phaser';
 import { ParticleManager } from '../managers/ParticleManager.js';
-import { ScoreManager } from '../managers/ScoreManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
-import { UIComponents } from '../ui/UIComponents.js';
-import { COLORS, STYLE } from '../utils/constants.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
 import type { Achievement } from '../types/index.js';
+import { UIComponents } from '../ui/UIComponents.js';
+import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 interface VictoryData {
     achievements?: Achievement[];
@@ -92,6 +92,7 @@ export class VictoryScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         glow.setStroke('#FFD700', 10);
         glow.setAlpha(0.3);
@@ -102,6 +103,7 @@ export class VictoryScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         text.setStroke('#8B0000', 6);
 
@@ -120,6 +122,7 @@ export class VictoryScene extends Scene {
             fontSize: '26px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 
@@ -136,6 +139,7 @@ export class VictoryScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         const highScore = SaveManager.getInstance().getHighScore();
@@ -145,6 +149,7 @@ export class VictoryScene extends Scene {
                 color: '#FF6B35',
                 fontStyle: 'bold',
                 fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
         }
     }
@@ -159,6 +164,7 @@ export class VictoryScene extends Scene {
             fontSize: '22px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         let achievementY = yOffset + 40;
@@ -167,6 +173,7 @@ export class VictoryScene extends Scene {
                 fontSize: '18px',
                 color: '#FFD700',
                 fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
             achievementY += 32;
         }

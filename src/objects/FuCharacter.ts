@@ -1,8 +1,9 @@
 import type { Scene } from 'phaser';
-import { Item } from './Item.js';
 import { AudioManager } from '../managers/AudioManager.js';
-import { ScoreManager } from '../managers/ScoreManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
+import { UI_RESOLUTION } from '../utils/constants.js';
+import { Item } from './Item.js';
 
 export class FuCharacter extends Item {
     constructor(scene: Scene, x: number, y: number, type: 'fu_copper' | 'fu_silver' | 'fu_gold') {
@@ -13,9 +14,9 @@ export class FuCharacter extends Item {
         const score = this.getScore();
         ScoreManager.getInstance().addScore(score);
         SaveManager.getInstance().addStat('totalFuCollected', 1);
-        
+
         AudioManager.getInstance().play('collect_fu');
-        
+
         this.showScorePopup(score);
     }
 
@@ -37,8 +38,9 @@ export class FuCharacter extends Item {
             fontSize: '24px',
             color: '#FFD700',
             fontStyle: 'bold',
+            resolution: UI_RESOLUTION,
         });
-        
+
         this.scene.tweens.add({
             targets: text,
             y: this.y - 50,

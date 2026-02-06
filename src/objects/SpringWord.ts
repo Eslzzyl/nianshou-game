@@ -1,6 +1,7 @@
 import type { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
+import { UI_RESOLUTION } from '../utils/constants.js';
 import { Item } from './Item.js';
 
 export class SpringWord extends Item {
@@ -48,6 +49,7 @@ export class SpringWord extends Item {
             fontSize: '28px',
             color: '#00FF00',
             fontStyle: 'bold',
+            resolution: UI_RESOLUTION,
         });
 
         this.scene.tweens.add({

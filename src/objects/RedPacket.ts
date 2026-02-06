@@ -2,6 +2,7 @@ import type { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
+import { UI_RESOLUTION } from '../utils/constants.js';
 import { Item } from './Item.js';
 
 export class RedPacket extends Item {
@@ -46,6 +47,7 @@ export class RedPacket extends Item {
             fontSize: '24px',
             color: '#FF0000',
             fontStyle: 'bold',
+            resolution: UI_RESOLUTION,
         });
 
         this.scene.tweens.add({

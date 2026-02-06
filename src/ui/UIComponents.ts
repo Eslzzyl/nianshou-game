@@ -1,5 +1,5 @@
 import type { Scene } from 'phaser';
-import { COLORS, STYLE } from '../utils/constants.js';
+import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 export class UIComponents {
     /**
@@ -37,6 +37,7 @@ export class UIComponents {
             color: isDisabled ? '#888888' : '#FFFFFF',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         // 添加发光效果
@@ -195,6 +196,7 @@ export class UIComponents {
             color: color,
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         glow.setStroke('#FFD700', 8);
@@ -206,6 +208,7 @@ export class UIComponents {
             color: color,
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         main.setStroke('#8B0000', 4);

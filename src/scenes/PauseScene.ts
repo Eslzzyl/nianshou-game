@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { UIComponents } from '../ui/UIComponents.js';
+import { UI_RESOLUTION } from '../utils/constants.js';
 
 export class PauseScene extends Scene {
     constructor() {
@@ -38,6 +39,7 @@ export class PauseScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: 'system-ui, -apple-system, sans-serif',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         // 按钮
@@ -70,6 +72,7 @@ export class PauseScene extends Scene {
             fontSize: '14px',
             color: '#666666',
             fontFamily: 'system-ui, -apple-system, sans-serif',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 

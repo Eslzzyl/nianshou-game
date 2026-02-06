@@ -3,7 +3,7 @@ import { AudioManager } from '../managers/AudioManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { UIComponents } from '../ui/UIComponents.js';
-import { COLORS, STYLE } from '../utils/constants.js';
+import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 import { isMobile } from '../utils/helpers.js';
 
 export class MenuScene extends Scene {
@@ -36,6 +36,7 @@ export class MenuScene extends Scene {
             fontSize: '12px',
             color: '#00FF00',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(1, 1);
     }
 
@@ -80,6 +81,7 @@ export class MenuScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         glow.setStroke('#FFD700', 12);
         glow.setAlpha(0.25);
@@ -90,6 +92,7 @@ export class MenuScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         title.setStroke('#8B0000', 6);
 
@@ -98,6 +101,7 @@ export class MenuScene extends Scene {
             fontSize: '22px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 
@@ -199,6 +203,7 @@ export class MenuScene extends Scene {
             fontSize: '14px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         });
 
         const highScore = SaveManager.getInstance().getHighScore();
@@ -206,6 +211,7 @@ export class MenuScene extends Scene {
             fontSize: '14px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(1, 0);
     }
 
@@ -214,6 +220,7 @@ export class MenuScene extends Scene {
             fontSize: '16px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         this.tweens.add({
@@ -248,6 +255,7 @@ export class MenuScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         menuContainer.add([overlay, panel, title]);
@@ -282,6 +290,7 @@ export class MenuScene extends Scene {
             fontSize: '32px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
@@ -319,6 +328,7 @@ export class MenuScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         menuContainer.add([overlay, panel, title]);
@@ -345,6 +355,7 @@ export class MenuScene extends Scene {
                 fontSize: '18px',
                 color: color,
                 fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
             });
 
             // 描述
@@ -352,6 +363,7 @@ export class MenuScene extends Scene {
                 fontSize: '13px',
                 color: ach.unlocked ? '#AAAAAA' : '#666666',
                 fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
             });
 
             menuContainer.add([rowBg, nameText, descText]);
@@ -363,6 +375,7 @@ export class MenuScene extends Scene {
             fontSize: '32px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
@@ -400,6 +413,7 @@ export class MenuScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         menuContainer.add([overlay, panel, title]);
@@ -411,12 +425,14 @@ export class MenuScene extends Scene {
             fontSize: '22px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         });
 
         const muteBtn = this.add.text(this.scale.width / 2 + 40, this.scale.height / 2 - 40, audioManager.isMuted() ? '关闭' : '开启', {
             fontSize: '22px',
             color: audioManager.isMuted() ? '#888888' : '#00FF00',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setInteractive({ useHandCursor: true });
 
         muteBtn.on('pointerover', () => muteBtn.setScale(1.1));
@@ -434,6 +450,7 @@ export class MenuScene extends Scene {
             fontSize: '32px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));

@@ -14,11 +14,12 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
         },
     },
     scale: {
-        mode: Phaser.Scale.EXPAND,
+        // Always fill the available browser window while preserving aspect ratio.
+        // This may crop a little on non-16:9 screens (e.g. 16:10), but avoids letterboxing.
+        mode: Phaser.Scale.ENVELOP,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: GAME_WIDTH,
         height: GAME_HEIGHT,
-        expandParent: true,
     },
     render: {
         pixelArt: false,

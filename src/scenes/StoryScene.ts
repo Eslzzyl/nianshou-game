@@ -1,8 +1,8 @@
 import { Scene } from 'phaser';
-import type { LevelType } from '../types/index.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
+import type { LevelType } from '../types/index.js';
 import { UIComponents } from '../ui/UIComponents.js';
-import { COLORS, STYLE } from '../utils/constants.js';
+import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 interface StoryData {
     level: LevelType;
@@ -141,6 +141,7 @@ export class StoryScene extends Scene {
 
         const icon = this.add.text(0, 0, LEVEL_ICONS[this.level], {
             fontSize: '56px',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         const title = this.add.text(0, 50, `第 ${this.level} 关：${LEVEL_NAMES[this.level]}`, {
@@ -148,6 +149,7 @@ export class StoryScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         title.setStroke('#8B0000', 4);
 
@@ -157,6 +159,7 @@ export class StoryScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         glow.setStroke('#FFD700', 8);
         glow.setAlpha(0.25);
@@ -188,6 +191,7 @@ export class StoryScene extends Scene {
                 color: '#FFFFFF',
                 align: 'center',
                 fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
 
             txt.setAlpha(0);
@@ -208,6 +212,7 @@ export class StoryScene extends Scene {
             fontSize: '18px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         this.tweens.add({

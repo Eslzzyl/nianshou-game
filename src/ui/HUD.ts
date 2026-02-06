@@ -1,6 +1,6 @@
 import type { Scene } from 'phaser';
-import { COLORS, REDPACKET_THRESHOLD, STYLE } from '../utils/constants.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
+import { COLORS, REDPACKET_THRESHOLD, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 export class HUD {
     private scene: Scene;
@@ -35,6 +35,7 @@ export class HUD {
             fontSize: '12px',
             color: '#00FF00',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(1, 1).setDepth(1000);
     }
 
@@ -75,6 +76,7 @@ export class HUD {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         });
     }
 
@@ -84,6 +86,7 @@ export class HUD {
         // 红包图标
         this.scene.add.text(x, 25, '🧧', {
             fontSize: '32px',
+            resolution: UI_RESOLUTION,
         });
 
         this.redPacketText = this.scene.add.text(x + 45, 32, 'x0', {
@@ -91,6 +94,7 @@ export class HUD {
             color: '#FF4444',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         });
 
         // 提示文字
@@ -98,6 +102,7 @@ export class HUD {
             fontSize: '12px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         });
     }
 
@@ -106,6 +111,7 @@ export class HUD {
             fontSize: '18px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5, 0);
     }
 
@@ -133,6 +139,7 @@ export class HUD {
             fontSize: '14px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 

@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
-import { COLORS, STYLE } from '../utils/constants.js';
+import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 export class BootScene extends Scene {
     constructor() {
@@ -87,6 +87,7 @@ export class BootScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         this.logoText.setStroke('#8B0000', 6);
 
@@ -105,6 +106,7 @@ export class BootScene extends Scene {
             fontSize: '20px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         // Logo呼吸动画

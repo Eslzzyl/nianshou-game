@@ -1,4 +1,5 @@
 import type { Scene } from 'phaser';
+import { UI_RESOLUTION } from '../utils/constants.js';
 
 export class HealthBar {
     private scene: Scene;
@@ -16,6 +17,7 @@ export class HealthBar {
         for (let i = 0; i < this.maxHealth; i++) {
             const heart = this.scene.add.text(x + i * 35, y, '❤️', {
                 fontSize: '28px',
+                resolution: UI_RESOLUTION,
             });
             this.hearts.push(heart);
         }
@@ -23,7 +25,7 @@ export class HealthBar {
 
     update(health: number): void {
         this.currentHealth = health;
-        
+
         for (let i = 0; i < this.hearts.length; i++) {
             this.hearts[i].text = i < this.currentHealth ? '❤️' : '🖤';
         }

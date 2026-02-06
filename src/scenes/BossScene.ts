@@ -1,9 +1,10 @@
-import { GameScene } from './GameScene.js';
+import { AudioManager } from '../managers/AudioManager.js';
+import { SaveManager } from '../managers/SaveManager.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
 import { Firecracker } from '../objects/Firecracker.js';
 import { Lantern } from '../objects/Lantern.js';
-import { AudioManager } from '../managers/AudioManager.js';
-import { ScoreManager } from '../managers/ScoreManager.js';
-import { SaveManager } from '../managers/SaveManager.js';
+import { UI_RESOLUTION } from '../utils/constants.js';
+import { GameScene } from './GameScene.js';
 
 export class BossScene extends GameScene {
     private bossPhase = 1;
@@ -19,11 +20,11 @@ export class BossScene extends GameScene {
 
     create(): void {
         super.create();
-        
+
         this.bossPhase = 1;
         this.phaseTimer = 0;
         this.rainIntensity = 1000;
-        
+
         this.showBossWarning();
     }
 
@@ -32,8 +33,9 @@ export class BossScene extends GameScene {
             fontSize: '48px',
             color: '#FF0000',
             fontStyle: 'bold',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
-        
+
         this.tweens.add({
             targets: warning,
             scale: 1.2,
@@ -46,11 +48,11 @@ export class BossScene extends GameScene {
 
     update(time: number, delta: number): void {
         super.update(time, delta);
-        
+
         if (this.isPaused || this.isGameOver) return;
-        
+
         this.phaseTimer += delta;
-        
+
         if (this.bossPhase === 1 && this.phaseTimer > 30000) {
             this.bossPhase = 2;
             this.phaseTimer = 0;
@@ -60,7 +62,7 @@ export class BossScene extends GameScene {
             this.phaseTimer = 0;
             this.showPhaseText('最终波：极限冲刺');
         }
-        
+
         this.spawnBossObstacles(time);
     }
 
@@ -69,8 +71,9 @@ export class BossScene extends GameScene {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
-        
+
         this.tweens.add({
             targets: phaseText,
             alpha: 0,
@@ -82,7 +85,7 @@ export class BossScene extends GameScene {
 
     private spawnBossObstacles(time: number): void {
         if (time - this.lastRainTime < this.rainIntensity) return;
-        
+
         switch (this.bossPhase) {
             case 1:
                 this.spawnRandomRain();
@@ -97,23 +100,23 @@ export class BossScene extends GameScene {
                 this.rainIntensity = 200;
                 break;
         }
-        
+
         this.lastRainTime = time;
     }
 
     private spawnRandomRain(): void {
         const count = Math.floor(Math.random() * 3) + 1;
-        
+
         for (let i = 0; i < count; i++) {
             const x = this.scale.width + Math.random() * 300;
             const y = 200 + Math.random() * 300;
-            
+
             const firecracker = new Firecracker(this, x, y, {
                 type: 'air',
                 movePattern: 'bounce',
                 warningTime: 0,
             });
-            
+
             this.obstacles.add(firecracker);
         }
     }
@@ -121,17 +124,17 @@ export class BossScene extends GameScene {
     private spawnWavePattern(): void {
         const startY = 200;
         const count = 5;
-        
+
         for (let i = 0; i < count; i++) {
             const x = this.scale.width + i * 100;
             const y = startY + Math.sin(i) * 100;
-            
+
             const firecracker = new Firecracker(this, x, y, {
                 type: 'air',
                 movePattern: 'static',
                 warningTime: 300,
             });
-            
+
             this.obstacles.add(firecracker);
         }
     }
@@ -142,14 +145,14 @@ export class BossScene extends GameScene {
             () => this.spawnWavePattern(),
             () => this.spawnLanternRow(),
         ];
-        
+
         const pattern = patterns[Math.floor(Math.random() * patterns.length)];
         pattern();
     }
 
     private spawnLanternRow(): void {
         const heights: Array<'low' | 'mid' | 'high'> = ['low', 'mid', 'high'];
-        
+
         for (const height of heights) {
             const lantern = new this.lanternCtor(this, this.scale.width + 100, 0, { height });
             this.obstacles.add(lantern);
@@ -165,13 +168,13 @@ export class BossScene extends GameScene {
 
     protected levelComplete(): void {
         this.isGameOver = true;
-        
+
         ScoreManager.getInstance().checkAchievements();
         SaveManager.getInstance().setHighScore(ScoreManager.getInstance().getScore());
         SaveManager.getInstance().unlockAchievement('nianshou_deliverer');
-        
+
         AudioManager.getInstance().play('level_complete');
-        
+
         this.scene.start('VictoryScene');
     }
 }

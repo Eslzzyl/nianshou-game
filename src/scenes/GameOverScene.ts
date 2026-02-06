@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { SaveManager } from '../managers/SaveManager.js';
 import { UIComponents } from '../ui/UIComponents.js';
-import { STYLE } from '../utils/constants.js';
+import { STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 interface GameOverData {
     score: number;
@@ -68,6 +68,7 @@ export class GameOverScene extends Scene {
             color: '#FF4444',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         glow.setStroke('#FF0000', 8);
         glow.setAlpha(0.3);
@@ -78,6 +79,7 @@ export class GameOverScene extends Scene {
             color: '#FF4444',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         text.setStroke('#8B0000', 5);
 
@@ -96,6 +98,7 @@ export class GameOverScene extends Scene {
             fontSize: '20px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 
@@ -111,12 +114,14 @@ export class GameOverScene extends Scene {
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         this.add.text(centerX, yOffset + 50, `🏃 奔跑距离: ${this.distance}m`, {
             fontSize: '24px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
         const highScore = SaveManager.getInstance().getHighScore();
@@ -124,6 +129,7 @@ export class GameOverScene extends Scene {
             fontSize: '20px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
     }
 
