@@ -123,6 +123,7 @@ export class Firecracker extends Obstacle {
         if (elapsed < this.config.warningTime) {
             if (this.warningSprite) {
                 this.warningSprite.x = this.x;
+                this.warningSprite.y = this.y - 60;
             }
         } else {
             if (this.config.movePattern === 'bounce' && this.config.type === 'air') {

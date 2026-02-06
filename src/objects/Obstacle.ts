@@ -13,6 +13,7 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
         this.setImmovable(true);
         if (this.body) {
             (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
+            (this.body as Phaser.Physics.Arcade.Body).moves = false;
         }
     }
 

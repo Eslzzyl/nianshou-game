@@ -297,6 +297,7 @@ export class GameScene extends Scene {
 
         this.player.update(delta);
         InputManager.getInstance().update();
+        ScoreManager.getInstance().updateInvincibleEnergy(delta);
 
         this.updateScroll(delta);
         this.updateBackgrounds(delta);

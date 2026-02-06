@@ -6,6 +6,8 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
     protected itemType: ItemType;
     protected config: ItemConfig;
     protected collected = false;
+    private startY = 0;
+    private startTime = 0;
 
     constructor(scene: Scene, x: number, y: number, texture: string, type: ItemType) {
         super(scene, x, y, texture);
@@ -18,10 +20,12 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
 
         if (this.body) {
             (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
+            (this.body as Phaser.Physics.Arcade.Body).moves = false;
         }
         this.setSize(40, 40);
 
-        this.createFloatAnimation();
+        this.startY = y;
+        this.startTime = Date.now();
     }
 
     private getConfig(): ItemConfig {
@@ -41,22 +45,15 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    private createFloatAnimation(): void {
-        this.scene.tweens.add({
-            targets: this,
-            y: this.y - 10,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut',
-        });
-    }
-
     update(scrollSpeed: number, dt: number): void {
         this.x -= scrollSpeed * dt;
 
         // 使用整数坐标可以减少亚像素模糊引起的闪烁
         this.x = Math.floor(this.x);
+
+        // 计算浮动效果，使用正弦函数
+        const elapsed = Date.now() - this.startTime;
+        this.y = this.startY + Math.sin(elapsed * 0.003) * 10;
 
         if (this.x < -50) {
             this.destroy();
@@ -66,9 +63,6 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
     collect(): void {
         if (this.collected) return;
         this.collected = true;
-
-        // 停止之前的浮动动画
-        this.scene.tweens.killTweensOf(this);
 
         this.onCollect();
 

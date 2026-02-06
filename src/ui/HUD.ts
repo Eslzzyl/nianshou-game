@@ -1,5 +1,6 @@
 import type { Scene } from 'phaser';
 import { COLORS, REDPACKET_THRESHOLD, STYLE } from '../utils/constants.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
 
 export class HUD {
     private scene: Scene;
@@ -141,7 +142,9 @@ export class HUD {
         this.distanceText.text = `${distance}m / ${maxDistance}m`;
 
         this.updateLives(lives);
-        this.updateEnergyBar(redPackets);
+        const scoreManager = ScoreManager.getInstance();
+        const energy = scoreManager.isInvincibleStateActive() ? scoreManager.getInvincibleEnergy() : redPackets;
+        this.updateEnergyBar(energy);
         this.updateFPS();
     }
 

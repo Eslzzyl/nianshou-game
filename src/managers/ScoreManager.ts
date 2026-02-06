@@ -1,5 +1,5 @@
 import type { LevelType, Achievement } from '../types/index.js';
-import { ACHIEVEMENTS, REDPACKET_THRESHOLD } from '../utils/constants.js';
+import { ACHIEVEMENTS, PLAYER, REDPACKET_THRESHOLD } from '../utils/constants.js';
 
 export class ScoreManager {
     private static instance: ScoreManager;
@@ -11,6 +11,8 @@ export class ScoreManager {
     private startTime = 0;
     private levelStartTime = 0;
     private damageTaken = 0;
+    private invincibleEnergy = 0;
+    private isInvincibleActive = false;
 
     private constructor() {}
 
@@ -34,6 +36,8 @@ export class ScoreManager {
         this.startTime = Date.now();
         this.levelStartTime = Date.now();
         this.damageTaken = 0;
+        this.invincibleEnergy = 0;
+        this.isInvincibleActive = false;
     }
 
     resetLevel(level: LevelType): void {
@@ -41,6 +45,8 @@ export class ScoreManager {
         this.levelStartTime = Date.now();
         this.damageTaken = 0;
         this.distance = 0;
+        this.invincibleEnergy = 0;
+        this.isInvincibleActive = false;
     }
 
     addScore(points: number): void {
@@ -82,10 +88,30 @@ export class ScoreManager {
 
     activateInvincible(): boolean {
         if (this.canActivateInvincible()) {
-            this.redPackets = 0;
+            this.invincibleEnergy = REDPACKET_THRESHOLD;
+            this.isInvincibleActive = true;
             return true;
         }
         return false;
+    }
+
+    updateInvincibleEnergy(delta: number): void {
+        if (this.isInvincibleActive && this.invincibleEnergy > 0) {
+            const energyDecreaseRate = REDPACKET_THRESHOLD / PLAYER.INVINCIBLE_DURATION;
+            this.invincibleEnergy -= energyDecreaseRate * delta;
+            if (this.invincibleEnergy <= 0) {
+                this.invincibleEnergy = 0;
+                this.isInvincibleActive = false;
+            }
+        }
+    }
+
+    getInvincibleEnergy(): number {
+        return this.invincibleEnergy;
+    }
+
+    isInvincibleStateActive(): boolean {
+        return this.isInvincibleActive;
     }
 
     getCurrentLevel(): LevelType {

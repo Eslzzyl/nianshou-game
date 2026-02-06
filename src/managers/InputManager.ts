@@ -52,9 +52,9 @@ export class InputManager {
 
     private setupTouchInput(): void {
         if (!this.scene) return;
-        
+
         const width = this.scene.scale.width;
-        
+
         this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (pointer.x < width / 2) {
                 this.jumpPressed = true;
@@ -64,7 +64,7 @@ export class InputManager {
                 this.onDuckCallback?.();
             }
         });
-        
+
         this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
             if (pointer.x < width / 2) {
                 this.jumpPressed = false;
@@ -72,15 +72,41 @@ export class InputManager {
                 this.duckPressed = false;
             }
         });
-        
+
         let lastClickTime = 0;
-        this.scene.input.on('pointerdown', () => {
+        let lastClickX = 0;
+        let clickCount = 0;
+        let clickTimer: Phaser.Time.TimerEvent | null = null;
+
+        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const currentTime = Date.now();
-            if (currentTime - lastClickTime < 300) {
-                this.activatePressed = true;
-                this.onActivateCallback?.();
+            const timeDiff = currentTime - lastClickTime;
+            const distance = Math.abs(pointer.x - lastClickX);
+
+            if (timeDiff < 300 && distance < 50) {
+                clickCount++;
+                if (clickCount >= 2) {
+                    this.activatePressed = true;
+                    this.onActivateCallback?.();
+                    clickCount = 0;
+                    if (clickTimer) {
+                        clickTimer.destroy();
+                        clickTimer = null;
+                    }
+                }
+            } else {
+                clickCount = 1;
             }
+
             lastClickTime = currentTime;
+            lastClickX = pointer.x;
+
+            if (clickTimer) {
+                clickTimer.destroy();
+            }
+            clickTimer = this.scene?.time.delayedCall(300, () => {
+                clickCount = 0;
+            }) || null;
         });
     }
 
@@ -90,6 +116,7 @@ export class InputManager {
         const wasJumpPressed = this.jumpPressed;
         const wasDuckPressed = this.duckPressed;
         const wasUpPressed = this.upPressed;
+        const wasActivatePressed = this.activatePressed;
         const wasLeftPressed = this.leftPressed;
         const wasRightPressed = this.rightPressed;
 
@@ -112,6 +139,10 @@ export class InputManager {
 
         if (this.upPressed && !wasUpPressed) {
             this.onUpCallback?.();
+        }
+
+        if (this.activatePressed && !wasActivatePressed) {
+            this.onActivateCallback?.();
         }
 
         if (this.leftPressed && !wasLeftPressed) {
