@@ -1,4 +1,4 @@
-import type { ParallaxLayer, LevelConfig, Achievement } from '../types/index.js';
+import type { Achievement, LevelConfig, ParallaxLayer } from '../types/index.js';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -99,7 +99,7 @@ export const PLAYER = {
     Y: 548,  // 玩家中心点，站在地面上（地面顶部580 - 玩家半高32 = 548）
     WIDTH: 64,
     HEIGHT: 64,
-    JUMP_VELOCITY: -600,
+    JUMP_VELOCITY: -1200,
     GRAVITY: 1000,
     MOVE_SPEED: 300,
     AIR_MOVE_SPEED: 200,
