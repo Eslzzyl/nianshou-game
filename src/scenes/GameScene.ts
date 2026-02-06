@@ -178,6 +178,12 @@ export class GameScene extends Scene {
             }
         });
 
+        InputManager.getInstance().onUp(() => {
+            if (!this.isPaused && !this.isGameOver) {
+                this.player.flyUp();
+            }
+        });
+
         InputManager.getInstance().onActivate(() => {
             if (!this.isPaused && !this.isGameOver) {
                 this.player.activateInvincible();
@@ -204,6 +210,10 @@ export class GameScene extends Scene {
             this.player.stopDuck();
         });
 
+        this.input.keyboard?.on('keyup-W', () => {
+            this.player.stopFlyVertical();
+        });
+
         this.input.keyboard?.on('keyup-A', () => {
             this.player.stopMoveX();
         });
@@ -218,6 +228,10 @@ export class GameScene extends Scene {
 
         this.input.keyboard?.on('keyup-RIGHT', () => {
             this.player.stopMoveX();
+        });
+
+        this.input.keyboard?.on('keyup-UP', () => {
+            this.player.stopFlyVertical();
         });
     }
 

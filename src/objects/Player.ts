@@ -1,5 +1,6 @@
 import type { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
+import { InputManager } from '../managers/InputManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
 import type { PlayerState } from '../types/index.js';
 import { PLAYER } from '../utils/constants.js';
@@ -154,8 +155,30 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (this.flyTimer <= 0) {
                 this.deactivateFly();
             } else {
-                // 飞行模式下的平滑悬浮
-                this.y += Math.sin(Date.now() * 0.005) * 1.2;
+                // 飞行模式下持续检测按键
+                const inputManager = InputManager.getInstance();
+
+                // 垂直方向
+                if (inputManager.isUpPressed()) {
+                    this.setVelocityY(-PLAYER.FLY_SPEED);
+                } else if (inputManager.isDuckPressed()) {
+                    this.setVelocityY(PLAYER.FLY_SPEED);
+                } else {
+                    this.setVelocityY(0);
+                }
+
+                // 水平方向
+                if (inputManager.isLeftPressed()) {
+                    this.setVelocityX(-PLAYER.FLY_SPEED);
+                    this.setFlipX(true);
+                } else if (inputManager.isRightPressed()) {
+                    this.setVelocityX(PLAYER.FLY_SPEED);
+                    this.setFlipX(false);
+                } else {
+                    this.setVelocityX(0);
+                }
+
+                // 飞行模式下翅膀跟随
                 if (this.wingSprite) {
                     this.wingSprite.setPosition(this.x, this.y - 10);
                 }
@@ -169,9 +192,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private clampPosition(): void {
-        const minX = 32;
-        const maxX = this.scene.scale.width - 32;
-        this.x = Phaser.Math.Clamp(this.x, minX, maxX);
+        // 只在飞行模式下进行额外的边界限制
+        // 普通模式下依赖物理引擎的 setCollideWorldBounds
+        if (this.currentState === 'FLYING') {
+            const minX = 32;
+            const maxX = this.scene.scale.width - 32;
+            this.x = Phaser.Math.Clamp(this.x, minX, maxX);
+
+            const minY = 50;
+            const maxY = this.scene.scale.height - 150;
+            this.y = Phaser.Math.Clamp(this.y, minY, maxY);
+        }
     }
 
     private handleStateAnimation(): void {
@@ -202,7 +233,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     jump(): boolean {
         if (this.currentState === 'FLYING') {
-            this.setVelocityY(-350);
+            // 飞行模式：W键控制向上，这里不处理
             return true;
         }
 
@@ -216,8 +247,30 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         return false;
     }
 
+    flyUp(): void {
+        if (this.currentState === 'FLYING') {
+            this.setVelocityY(-PLAYER.FLY_SPEED);
+        }
+    }
+
+    flyDown(): void {
+        if (this.currentState === 'FLYING') {
+            this.setVelocityY(PLAYER.FLY_SPEED);
+        }
+    }
+
+    stopFlyVertical(): void {
+        if (this.currentState === 'FLYING') {
+            this.setVelocityY(0);
+        }
+    }
+
     duck(): void {
-        if (this.currentState === 'FLYING') return;
+        if (this.currentState === 'FLYING') {
+            // 飞行模式：S键控制向下
+            this.flyDown();
+            return;
+        }
 
         if (this.grounded && this.currentState !== 'DUCKING') {
             this.setPlayerState('DUCKING');
@@ -227,6 +280,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     stopDuck(): void {
+        if (this.currentState === 'FLYING') {
+            // 飞行模式：停止向下
+            this.stopFlyVertical();
+            return;
+        }
+
         if (this.currentState === 'DUCKING') {
             this.setPlayerState('RUNNING');
             this.setSize(PLAYER.WIDTH, PLAYER.HEIGHT);
@@ -235,19 +294,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     moveLeft(): void {
-        const speed = this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED;
+        const speed = this.currentState === 'FLYING'
+            ? PLAYER.FLY_SPEED
+            : (this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED);
         this.setVelocityX(-speed);
         this.setFlipX(true);
     }
 
     moveRight(): void {
-        const speed = this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED;
+        const speed = this.currentState === 'FLYING'
+            ? PLAYER.FLY_SPEED
+            : (this.grounded ? PLAYER.MOVE_SPEED : PLAYER.AIR_MOVE_SPEED);
         this.setVelocityX(speed);
         this.setFlipX(false);
     }
 
     stopMoveX(): void {
-        this.setVelocityX(0);
+        if (this.currentState === 'FLYING') {
+            this.setVelocityX(0);
+        } else {
+            this.setVelocityX(0);
+        }
     }
 
     takeDamage(): boolean {

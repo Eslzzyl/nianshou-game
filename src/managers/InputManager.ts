@@ -6,18 +6,21 @@ export class InputManager {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
     private jumpKey: Phaser.Input.Keyboard.Key | null = null;
     private duckKey: Phaser.Input.Keyboard.Key | null = null;
+    private upKey: Phaser.Input.Keyboard.Key | null = null;
     private activateKey: Phaser.Input.Keyboard.Key | null = null;
     private leftKey: Phaser.Input.Keyboard.Key | null = null;
     private rightKey: Phaser.Input.Keyboard.Key | null = null;
-    
+
     private jumpPressed = false;
     private duckPressed = false;
+    private upPressed = false;
     private activatePressed = false;
     private leftPressed = false;
     private rightPressed = false;
-    
+
     private onJumpCallback: (() => void) | null = null;
     private onDuckCallback: (() => void) | null = null;
+    private onUpCallback: (() => void) | null = null;
     private onActivateCallback: (() => void) | null = null;
     private onLeftCallback: (() => void) | null = null;
     private onRightCallback: (() => void) | null = null;
@@ -33,16 +36,17 @@ export class InputManager {
 
     init(scene: Scene): void {
         this.scene = scene;
-        
+
         if (scene.input.keyboard) {
             this.cursors = scene.input.keyboard.createCursorKeys();
             this.jumpKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
             this.duckKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+            this.upKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
             this.activateKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
             this.leftKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
             this.rightKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         }
-        
+
         this.setupTouchInput();
     }
 
@@ -82,32 +86,38 @@ export class InputManager {
 
     update(): void {
         if (!this.scene) return;
-        
+
         const wasJumpPressed = this.jumpPressed;
         const wasDuckPressed = this.duckPressed;
+        const wasUpPressed = this.upPressed;
         const wasLeftPressed = this.leftPressed;
         const wasRightPressed = this.rightPressed;
-        
+
         if (this.cursors) {
             this.jumpPressed = this.cursors.up.isDown || this.cursors.space.isDown || this.jumpKey?.isDown || false;
             this.duckPressed = this.cursors.down.isDown || this.duckKey?.isDown || false;
+            this.upPressed = this.upKey?.isDown || false;
             this.activatePressed = this.activateKey?.isDown || false;
             this.leftPressed = this.cursors.left.isDown || this.leftKey?.isDown || false;
             this.rightPressed = this.cursors.right.isDown || this.rightKey?.isDown || false;
         }
-        
+
         if (this.jumpPressed && !wasJumpPressed) {
             this.onJumpCallback?.();
         }
-        
+
         if (this.duckPressed && !wasDuckPressed) {
             this.onDuckCallback?.();
         }
-        
+
+        if (this.upPressed && !wasUpPressed) {
+            this.onUpCallback?.();
+        }
+
         if (this.leftPressed && !wasLeftPressed) {
             this.onLeftCallback?.();
         }
-        
+
         if (this.rightPressed && !wasRightPressed) {
             this.onRightCallback?.();
         }
@@ -119,6 +129,10 @@ export class InputManager {
 
     isDuckPressed(): boolean {
         return this.duckPressed;
+    }
+
+    isUpPressed(): boolean {
+        return this.upPressed;
     }
 
     isActivatePressed(): boolean {
@@ -141,6 +155,10 @@ export class InputManager {
         this.onDuckCallback = callback;
     }
 
+    onUp(callback: () => void): void {
+        this.onUpCallback = callback;
+    }
+
     onActivate(callback: () => void): void {
         this.onActivateCallback = callback;
     }
@@ -156,6 +174,7 @@ export class InputManager {
     clearCallbacks(): void {
         this.onJumpCallback = null;
         this.onDuckCallback = null;
+        this.onUpCallback = null;
         this.onActivateCallback = null;
         this.onLeftCallback = null;
         this.onRightCallback = null;
