@@ -12,6 +12,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private invincibleTimer = 0;
     private flyTimer = 0;
     private wingSprite?: Phaser.GameObjects.Sprite;
+    private jumpCount = 0;  // 跳跃次数计数器（0=在地面上，1=一段跳，2=二段跳）
 
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'nianshou_run');
@@ -136,6 +137,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (this.grounded) {
             this.coyoteTimer = PLAYER.COYOTE_TIME;
+            this.jumpCount = 0;  // 重置跳跃次数
         } else {
             this.coyoteTimer = Math.max(0, this.coyoteTimer - delta);
         }
@@ -252,13 +254,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             return true;
         }
 
+        // 一段跳：地面或土狼时间
         if (this.coyoteTimer > 0 || this.grounded) {
             this.setVelocityY(PLAYER.JUMP_VELOCITY);
             this.setPlayerState('JUMPING');
             this.coyoteTimer = 0;
+            this.jumpCount = 1;
             AudioManager.getInstance().play('jump');
             return true;
         }
+
+        // 二段跳：已经在空中且只跳过一次
+        if (this.jumpCount === 1) {
+            this.setVelocityY(PLAYER.JUMP_VELOCITY);
+            this.setPlayerState('JUMPING');
+            this.jumpCount = 2;
+            AudioManager.getInstance().play('jump');
+            return true;
+        }
+
         return false;
     }
 
