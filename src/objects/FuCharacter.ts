@@ -10,6 +10,15 @@ export class FuCharacter extends Item {
         super(scene, x, y, type, type);
     }
 
+    reset(x: number, y: number, type: 'fu_copper' | 'fu_silver' | 'fu_gold'): void {
+        this.itemType = type;
+        this.config = this.getConfig();
+        this.setupForReuse(x, y);
+        
+        // Update texture to match type
+        this.setTexture(type);
+    }
+
     protected onCollect(): void {
         const score = this.getScore();
         ScoreManager.getInstance().addScore(score);

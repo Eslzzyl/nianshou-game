@@ -7,6 +7,17 @@ import { Item } from './Item.js';
 export class SpringWord extends Item {
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'spring_word', 'spring_word');
+        this.init();
+    }
+
+    reset(x: number, y: number): void {
+        this.itemType = 'spring_word';
+        this.config = this.getConfig();
+        this.setupForReuse(x, y);
+        this.init();
+    }
+
+    private init(): void {
         this.createAnimation();
     }
 

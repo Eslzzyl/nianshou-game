@@ -225,6 +225,16 @@ export class VirtualButtons {
     }
 
     destroy(): void {
+        // 移除事件监听
+        this.joystickBase?.off('pointerdown');
+        this.scene?.input.off('pointermove');
+        this.scene?.input.off('pointerup');
+
+        // 清理回调
+        this.onJoystickMoveCallback = null;
+        this.onJoystickReleaseCallback = null;
+
+        // 销毁游戏对象
         this.jumpBtn?.destroy();
         this.duckBtn?.destroy();
         this.activateBtn?.destroy();

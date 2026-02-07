@@ -1,8 +1,12 @@
 import type { Scene } from 'phaser';
+import { ObjectPoolManager } from '../managers/ObjectPoolManager.js';
 
 export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
     protected damage = 1;
     protected isActive = true;
+    protected createdTime = 0;
+
+    declare body: Phaser.Physics.Arcade.Body;
 
     constructor(scene: Scene, x: number, y: number, texture: string) {
         super(scene, x, y, texture);
@@ -11,18 +15,18 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.setImmovable(true);
-        if (this.body) {
-            (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
-            (this.body as Phaser.Physics.Arcade.Body).moves = false;
-        }
+        this.body.allowGravity = false;
+        this.body.moves = false;
     }
+
+    abstract reset(x: number, y: number, config?: Record<string, unknown>): void;
 
     update(scrollSpeed: number, dt: number): void {
         this.x -= scrollSpeed * dt;
         this.x = Math.floor(this.x);
 
         if (this.x < -100) {
-            this.destroy();
+            ObjectPoolManager.getInstance().release(this);
         }
     }
 
@@ -36,5 +40,13 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
 
     deactivate(): void {
         this.isActive = false;
+    }
+
+    protected setupForReuse(x: number, y: number): void {
+        this.x = x;
+        this.y = y;
+        this.isActive = true;
+        this.createdTime = this.scene?.time.now ?? 0;
+        this.body.enable = true;
     }
 }

@@ -1,17 +1,13 @@
 import { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
 import { InputManager } from '../managers/InputManager.js';
+import { ObjectPoolManager } from '../managers/ObjectPoolManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
-import { Firecracker } from '../objects/Firecracker.js';
-import { FuCharacter } from '../objects/FuCharacter.js';
-import { Item } from '../objects/Item.js';
-import { Lantern } from '../objects/Lantern.js';
-import { Obstacle } from '../objects/Obstacle.js';
+import type { Item } from '../objects/Item.js';
+import type { Obstacle } from '../objects/Obstacle.js';
 import { Player } from '../objects/Player.js';
-import { RedPacket } from '../objects/RedPacket.js';
-import { SpringWord } from '../objects/SpringWord.js';
 import type { LevelType } from '../types/index.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualButtons } from '../ui/VirtualButtons.js';
@@ -68,6 +64,7 @@ export class GameScene extends Scene {
     create(): void {
         AudioManager.getInstance().init(this);
         InputManager.getInstance().init(this);
+        ObjectPoolManager.getInstance().init();
         ParticleManager.getInstance().init(this);
 
         // 自适应窗口尺寸（Scale.RESIZE）
@@ -93,6 +90,49 @@ export class GameScene extends Scene {
 
         // 首次创建后同步一次尺寸
         this.onResize({ width: this.scale.width, height: this.scale.height } as Phaser.Structs.Size);
+
+        // 注册场景关闭时的清理
+        this.events.once('shutdown', this.shutdown, this);
+    }
+
+    shutdown(): void {
+        // 清理事件监听
+        this.scale.off('resize', this.onResize, this);
+        this.events.off(Phaser.Scenes.Events.RESUME);
+        
+        // 清理键盘事件
+        if (this.input.keyboard) {
+            this.input.keyboard.off('keydown-ESC');
+            this.input.keyboard.off('keyup-DOWN');
+            this.input.keyboard.off('keyup-S');
+            this.input.keyboard.off('keyup-W');
+            this.input.keyboard.off('keyup-A');
+            this.input.keyboard.off('keyup-D');
+            this.input.keyboard.off('keyup-LEFT');
+            this.input.keyboard.off('keyup-RIGHT');
+            this.input.keyboard.off('keyup-UP');
+        }
+
+        // 清理回调
+        InputManager.getInstance().destroy();
+
+        // 清理对象池
+        ObjectPoolManager.getInstance().clearAll();
+
+        // 清理粒子管理器
+        ParticleManager.getInstance().destroy();
+
+        // 清理HUD
+        this.hud?.destroy();
+
+        // 清理虚拟按键
+        this.virtualButtons?.destroy();
+
+        // 清理花瓣装饰
+        for (const petal of this.petals) {
+            petal.destroy();
+        }
+        this.petals = [];
     }
 
     private createBackgrounds(): void {
@@ -151,12 +191,8 @@ export class GameScene extends Scene {
     }
 
     private createGroups(): void {
-        this.obstacles = this.physics.add.group({
-            classType: Firecracker,
-        });
-
-        this.items = this.physics.add.group({
-        });
+        this.obstacles = this.physics.add.group();
+        this.items = this.physics.add.group();
     }
 
     private createCollisions(): void {
@@ -371,15 +407,17 @@ export class GameScene extends Scene {
     }
 
     private updateObstacles(dt: number): void {
-        this.obstacles.getChildren().forEach((child) => {
-            (child as Obstacle).update(this.scrollSpeed, dt);
-        });
+        const children = this.obstacles.getChildren();
+        for (let i = 0; i < children.length; i++) {
+            (children[i] as Obstacle).update(this.scrollSpeed, dt);
+        }
     }
 
     private updateItems(dt: number): void {
-        this.items.getChildren().forEach((child) => {
-            (child as Item).update(this.scrollSpeed, dt);
-        });
+        const children = this.items.getChildren();
+        for (let i = 0; i < children.length; i++) {
+            (children[i] as Item).update(this.scrollSpeed, dt);
+        }
     }
 
     private updateScroll(delta: number): void {
@@ -421,7 +459,7 @@ export class GameScene extends Scene {
             const firecrackerType = Math.random() < 0.7 ? 'ground' : 'air';
             const movePattern = Math.random() < 0.5 ? 'static' : 'bounce';
 
-            const firecracker = new Firecracker(this, x, groundTop + 20, {
+            const firecracker = ObjectPoolManager.getInstance().getFirecracker(this, x, groundTop + 20, {
                 type: firecrackerType,
                 movePattern,
             });
@@ -430,8 +468,7 @@ export class GameScene extends Scene {
             const heights: Array<'low' | 'mid' | 'high'> = ['low', 'mid', 'high'];
             const height = heights[Math.floor(Math.random() * heights.length)];
 
-            // Lantern computes its own Y relative to scene height/ground
-            const lantern = new Lantern(this, x, 0, { height });
+            const lantern = ObjectPoolManager.getInstance().getLantern(this, x, 0, { height });
             this.obstacles.add(lantern);
         }
     }
@@ -455,17 +492,17 @@ export class GameScene extends Scene {
         if (type < 0.5) {
             const fuTypes: Array<'fu_copper' | 'fu_silver' | 'fu_gold'> = ['fu_copper', 'fu_copper', 'fu_copper', 'fu_silver', 'fu_gold'];
             const fuType = fuTypes[Math.floor(Math.random() * fuTypes.length)];
-            item = new FuCharacter(this, x, spawnY, fuType);
+            item = ObjectPoolManager.getInstance().getFuCharacter(this, x, spawnY, fuType);
         } else if (type < 0.8) {
-            item = new RedPacket(this, x, spawnY);
+            item = ObjectPoolManager.getInstance().getRedPacket(this, x, spawnY);
         } else {
-            item = new SpringWord(this, x, spawnY);
+            item = ObjectPoolManager.getInstance().getSpringWord(this, x, spawnY);
         }
 
         this.items.add(item);
     }
 
-    private onHitObstacle(player: Player, obstacle: Firecracker | Lantern): void {
+    private onHitObstacle(player: Player, obstacle: Obstacle): void {
         if (!obstacle.isActiveObstacle()) return;
 
         if (player.isInvincible()) {
@@ -493,7 +530,7 @@ export class GameScene extends Scene {
         }
     }
 
-    private onCollectItem(_player: Player, item: FuCharacter | RedPacket | SpringWord): void {
+    private onCollectItem(_player: Player, item: Item): void {
         if (item.isCollected()) return;
 
         // 添加收集特效

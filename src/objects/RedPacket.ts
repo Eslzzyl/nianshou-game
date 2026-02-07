@@ -8,6 +8,17 @@ import { Item } from './Item.js';
 export class RedPacket extends Item {
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'redpacket', 'redpacket');
+        this.init();
+    }
+
+    reset(x: number, y: number): void {
+        this.itemType = 'redpacket';
+        this.config = this.getConfig();
+        this.setupForReuse(x, y);
+        this.init();
+    }
+
+    private init(): void {
         this.createAnimation();
     }
 

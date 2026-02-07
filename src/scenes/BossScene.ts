@@ -1,8 +1,7 @@
 import { AudioManager } from '../managers/AudioManager.js';
+import { ObjectPoolManager } from '../managers/ObjectPoolManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
-import { Firecracker } from '../objects/Firecracker.js';
-import { Lantern } from '../objects/Lantern.js';
 import { UI_RESOLUTION } from '../utils/constants.js';
 import { GameScene } from './GameScene.js';
 
@@ -11,11 +10,9 @@ export class BossScene extends GameScene {
     private phaseTimer = 0;
     private rainIntensity = 1000;
     private lastRainTime = 0;
-    private lanternCtor: typeof Lantern;
 
     constructor() {
         super({ key: 'BossScene' });
-        this.lanternCtor = Lantern;
     }
 
     create(): void {
@@ -111,7 +108,7 @@ export class BossScene extends GameScene {
             const x = this.scale.width + Math.random() * 300;
             const y = 200 + Math.random() * 300;
 
-            const firecracker = new Firecracker(this, x, y, {
+            const firecracker = ObjectPoolManager.getInstance().getFirecracker(this, x, y, {
                 type: 'air',
                 movePattern: 'bounce',
                 warningTime: 0,
@@ -129,7 +126,7 @@ export class BossScene extends GameScene {
             const x = this.scale.width + i * 100;
             const y = startY + Math.sin(i) * 100;
 
-            const firecracker = new Firecracker(this, x, y, {
+            const firecracker = ObjectPoolManager.getInstance().getFirecracker(this, x, y, {
                 type: 'air',
                 movePattern: 'static',
                 warningTime: 300,
@@ -154,7 +151,7 @@ export class BossScene extends GameScene {
         const heights: Array<'low' | 'mid' | 'high'> = ['low', 'mid', 'high'];
 
         for (const height of heights) {
-            const lantern = new this.lanternCtor(this, this.scale.width + 100, 0, { height });
+            const lantern = ObjectPoolManager.getInstance().getLantern(this, this.scale.width + 100, 0, { height });
             this.obstacles.add(lantern);
         }
     }

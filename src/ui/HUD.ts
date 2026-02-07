@@ -6,6 +6,7 @@ export class HUD {
     private scene: Scene;
     private scoreText!: Phaser.GameObjects.Text;
     private livesContainer!: Phaser.GameObjects.Container;
+    private livesLanterns: Phaser.GameObjects.Graphics[] = [];
     private redPacketText!: Phaser.GameObjects.Text;
     private redPacketIcon!: Phaser.GameObjects.Text;
     private redPacketHint!: Phaser.GameObjects.Text;
@@ -18,6 +19,13 @@ export class HUD {
     private energyLabel!: Phaser.GameObjects.Text;
     private fpsText?: Phaser.GameObjects.Text;
     private shimmerLight?: Phaser.GameObjects.Graphics;
+
+    // 缓存状态，避免不必要的重绘
+    private lastLives = -1;
+    private lastScore = -1;
+    private lastRedPackets = -1;
+    private lastDistance = -1;
+    private lastEnergy = -1;
 
     constructor(scene: Scene) {
         this.scene = scene;
@@ -77,6 +85,7 @@ export class HUD {
 
     private createLives(): void {
         this.livesContainer = this.scene.add.container(30, 30);
+        this.createLivesCache();
         this.updateLives(3);
     }
 
@@ -190,26 +199,54 @@ export class HUD {
     }
 
     update(score: number, lives: number, redPackets: number, distance: number, maxDistance: number): void {
-        this.scoreText.text = `福气值: ${score}`;
-        this.redPacketText.text = `x${redPackets}`;
-        this.distanceText.text = `${distance}m / ${maxDistance}m`;
+        // 只在数值变化时更新文本
+        if (score !== this.lastScore) {
+            this.scoreText.text = `福气值: ${score}`;
+            this.lastScore = score;
+        }
+        
+        if (redPackets !== this.lastRedPackets) {
+            this.redPacketText.text = `x${redPackets}`;
+            this.lastRedPackets = redPackets;
+        }
+        
+        if (distance !== this.lastDistance) {
+            this.distanceText.text = `${distance}m / ${maxDistance}m`;
+            this.lastDistance = distance;
+        }
 
         this.updateLives(lives);
+        
         const scoreManager = ScoreManager.getInstance();
         const energy = scoreManager.isInvincibleStateActive() ? scoreManager.getInvincibleEnergy() : redPackets;
         this.updateEnergyBar(energy);
+        
         this.updateFPS();
     }
 
-    private updateLives(lives: number): void {
-        this.livesContainer.removeAll(true);
-
+    private createLivesCache(): void {
+        // 初始化时创建所有灯笼，之后只更新可见性
         for (let i = 0; i < 3; i++) {
-            const isActive = i < lives;
             const heartContainer = this.scene.add.container(i * 45, 0);
 
             // 灯笼背景
             const lantern = this.scene.add.graphics();
+            this.livesLanterns.push(lantern);
+
+            heartContainer.add(lantern);
+            this.livesContainer.add(heartContainer);
+        }
+    }
+
+    private updateLives(lives: number): void {
+        if (lives === this.lastLives) return;
+        this.lastLives = lives;
+
+        for (let i = 0; i < 3; i++) {
+            const isActive = i < lives;
+            const lantern = this.livesLanterns[i];
+            
+            lantern.clear();
             if (isActive) {
                 lantern.fillStyle(COLORS.RED_PRIMARY, 1);
                 lantern.fillEllipse(0, 5, 28, 34);
@@ -224,13 +261,15 @@ export class HUD {
                 lantern.fillStyle(0x666666, 1);
                 lantern.fillRect(-3, -18, 6, 12);
             }
-
-            heartContainer.add(lantern);
-            this.livesContainer.add(heartContainer);
         }
     }
 
     private updateEnergyBar(redPackets: number): void {
+        // 只在小数点后一位有变化时更新，避免每帧重绘
+        const roundedEnergy = Math.floor(redPackets * 10) / 10;
+        if (roundedEnergy === this.lastEnergy) return;
+        this.lastEnergy = roundedEnergy;
+
         const x = this.scene.scale.width / 2 - 150;
         const y = this.scene.scale.height - 50;
         const width = 300;

@@ -3,13 +3,21 @@ import type { FirecrackerConfig } from '../types/index.js';
 import { Obstacle } from './Obstacle.js';
 
 export class Firecracker extends Obstacle {
-    private config: FirecrackerConfig;
-    private startTime = 0;
+    private config!: FirecrackerConfig;
     private warningSprite?: Phaser.GameObjects.Sprite;
 
     constructor(scene: Scene, x: number, y: number, config: Partial<FirecrackerConfig> = {}) {
         super(scene, x, y, 'firecracker');
+        this.init(x, y, config);
+    }
 
+    reset(x: number, y: number, config: Partial<FirecrackerConfig> = {}): void {
+        this.init(x, y, config);
+    }
+
+    private init(x: number, y: number, config: Partial<FirecrackerConfig>): void {
+        this.setupForReuse(x, y);
+        
         this.config = {
             type: 'ground',
             movePattern: 'static',
@@ -19,7 +27,6 @@ export class Firecracker extends Obstacle {
         };
 
         this.damage = this.config.damage;
-        this.startTime = Date.now();
 
         this.setupPhysics();
         this.createAnimations();
@@ -115,7 +122,7 @@ export class Firecracker extends Obstacle {
     }
 
     update(scrollSpeed: number, dt: number): void {
-        const elapsed = Date.now() - this.startTime;
+        const elapsed = (this.scene?.time.now ?? 0) - this.createdTime;
 
         // 始终更新位置，即使在预警期
         super.update(scrollSpeed, dt);

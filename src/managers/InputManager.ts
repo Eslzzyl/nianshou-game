@@ -211,4 +211,41 @@ export class InputManager {
         this.onLeftCallback = null;
         this.onRightCallback = null;
     }
+
+    destroy(): void {
+        // 移除所有键盘按键监听
+        if (this.cursors) {
+            this.cursors.up.removeAllListeners();
+            this.cursors.down.removeAllListeners();
+            this.cursors.left.removeAllListeners();
+            this.cursors.right.removeAllListeners();
+            this.cursors.space?.removeAllListeners();
+        }
+
+        this.jumpKey?.removeAllListeners();
+        this.duckKey?.removeAllListeners();
+        this.upKey?.removeAllListeners();
+        this.activateKey?.removeAllListeners();
+        this.leftKey?.removeAllListeners();
+        this.rightKey?.removeAllListeners();
+
+        // 清理触摸事件
+        if (this.scene) {
+            this.scene.input.off('pointerdown');
+            this.scene.input.off('pointerup');
+        }
+
+        // 清理回调
+        this.clearCallbacks();
+
+        // 清理场景引用
+        this.scene = null;
+        this.cursors = null;
+        this.jumpKey = null;
+        this.duckKey = null;
+        this.upKey = null;
+        this.activateKey = null;
+        this.leftKey = null;
+        this.rightKey = null;
+    }
 }
