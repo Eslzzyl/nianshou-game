@@ -571,90 +571,229 @@ export class BootScene extends Scene {
             this.drawCharPlaceholder(g, frameWidth / 2, frameHeight / 2, 0xCCFFCC, 24);
         });
 
-        // 背景占位图 - 现代化春节风格
-        this.generateTexture('bg_sky', 1280, 720, (g, w, h) => {
-            // 渐变天空 - 暖色调
+        // ============================================
+        // 关卡背景 - 每个关卡4层独立背景
+        // ============================================
+
+        // 第一关：乡村街道
+        this.generateTexture('bg1_sky', 1280, 720, (g, w, h) => {
             for (let i = 0; i < h; i++) {
                 const ratio = i / h;
-                const r = Math.floor(40 + ratio * 60);
-                const gVal = Math.floor(15 + ratio * 30);
-                const b = Math.floor(20 + ratio * 40);
+                const r = Math.floor(255 - ratio * 80);
+                const gVal = Math.floor(200 - ratio * 100);
+                const b = Math.floor(150 - ratio * 100);
                 g.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b));
                 g.fillRect(0, i, w, 1);
             }
         });
 
-        this.generateTexture('bg_mountains', 1280, 720, (g, w, h) => {
-            // 远山 - 水墨风格
-            g.fillStyle(0x3d2f2f);
+        this.generateTexture('bg1_hills', 1280, 720, (g, w) => {
+            // 山丘层 - tileSprite在y=100，显示纹理0-620区域，所以内容画在顶部0-200
+            g.fillStyle(0x4a7a4a);
+            for (let x = 0; x < w; x += 100) {
+                const height = 80 + Math.sin(x * 0.01) * 40 + Math.sin(x * 0.025) * 20;
+                const baseY = 200; // 从纹理顶部向下200px处开始
+                g.fillTriangle(x, baseY, x + 50, baseY - height, x + 100, baseY);
+            }
+            g.fillStyle(0x5a8a5a);
             for (let x = 0; x < w; x += 80) {
-                const height = 120 + Math.sin(x * 0.008) * 40 + Math.sin(x * 0.02) * 20;
-                g.fillTriangle(x, h - 80, x + 40, h - 80 - height, x + 80, h - 80);
+                const height = 50 + Math.sin(x * 0.015 + 1) * 25;
+                const baseY = 230; // 稍低一点的山丘
+                g.fillTriangle(x, baseY, x + 40, baseY - height, x + 80, baseY);
             }
         });
 
-        this.generateTexture('bg_buildings', 1280, 720, (g, w, h) => {
-            // 现代春节风格建筑剪影
-            g.fillStyle(0x5a3a3a);
-            for (let x = 0; x < w; x += 60) {
-                const buildingHeight = 80 + Math.random() * 120;
-                g.fillRect(x, h - 180 - buildingHeight, 50, buildingHeight);
+        this.generateTexture('bg1_houses', 1280, 720, (g, w) => {
+            // 房屋层 - tileSprite在y=200，显示纹理0-520区域，内容画在顶部0-300
+            for (let x = 0; x < w; x += 120) {
+                const houseW = 70 + (x % 40);
+                const houseH = 60 + (x % 30);
+                const houseBase = 300; // 房屋底部在纹理300px处
+                g.fillStyle(0x8B7355);
+                g.fillRect(x, houseBase - houseH, houseW, houseH);
+                g.fillStyle(0x6B5344);
+                g.fillTriangle(x - 10, houseBase - houseH, x + houseW / 2, houseBase - houseH - 35, x + houseW + 10, houseBase - houseH);
+                g.fillStyle(0x8B7355);
+                const chimneyH = 25 + (x % 15);
+                g.fillRect(x + houseW - 15, houseBase - houseH - chimneyH, 12, chimneyH);
+            }
+            // 树木
+            g.fillStyle(0x5a3a2a);
+            for (let x = 0; x < w; x += 150) {
+                g.fillRect(x + 25, 340, 20, 40);
+            }
+        });
 
-                // 窗户灯光 - 暖黄色
-                g.fillStyle(0xFFAA44);
-                for (let y = h - 180 - buildingHeight + 10; y < h - 180; y += 25) {
-                    if (Math.random() > 0.4) {
-                        g.fillRect(x + 10, y, 12, 15);
+        this.generateTexture('bg1_ground', 1280, 720, (g, w) => {
+            // 地面层 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            g.fillStyle(0x8B5a2a);
+            g.fillRect(0, 0, w, 140);
+            g.fillStyle(0x6B4520);
+            for (let x = 0; x < w; x += 30) {
+                g.fillRect(x, 0, 2, 140);
+            }
+            g.fillStyle(0xA0522D);
+            for (let x = 10; x < w; x += 80) {
+                g.fillEllipse(x, 110, 40, 15);
+            }
+        });
+
+        // 第二关：城市夜景
+        this.generateTexture('bg2_sky', 1280, 720, (g, w, h) => {
+            for (let i = 0; i < h; i++) {
+                const ratio = i / h;
+                const r = Math.floor(40 + ratio * 30);
+                const gVal = Math.floor(20 + ratio * 20);
+                const b = Math.floor(60 + ratio * 40);
+                g.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b));
+                g.fillRect(0, i, w, 1);
+            }
+            // 确定性星星生成
+            g.fillStyle(0xFFFFFF);
+            for (let i = 0; i < 50; i++) {
+                const sx = ((i * 137) % 1280);
+                const sy = ((i * 293) % 360);
+                const size = 1 + (i % 2);
+                g.fillCircle(sx, sy, size);
+            }
+            g.fillStyle(0xFFD700);
+            g.fillCircle(w - 100, 80, 35);
+        });
+
+        this.generateTexture('bg2_cityline', 1280, 720, (g, w) => {
+            // 城市天际线 - tileSprite在y=100，显示纹理0-620区域，内容画在顶部0-200
+            g.fillStyle(0x6a5a7a);
+            for (let x = 0; x < w; x += 60) {
+                const bh = 180 + ((x * 7) % 150);
+                // 从纹理顶部开始向下绘制建筑
+                const buildingTop = 50;
+                g.fillRect(x, buildingTop, 55, bh);
+            }
+        });
+
+        this.generateTexture('bg2_buildings', 1280, 720, (g, w) => {
+            // 城市建筑 - tileSprite在y=200，显示纹理0-520区域，内容画在顶部0-300
+            for (let x = 0; x < w; x += 80) {
+                const bh = 120 + ((x * 3) % 130);
+                const bw = 70 + ((x * 5) % 30);
+                g.fillStyle(0x8a7a9a);
+                const buildingTop = 80;
+                g.fillRect(x, buildingTop, bw, bh);
+                g.fillStyle(0xFFE55C);
+                for (let y = buildingTop + 10; y < buildingTop + bh; y += 20) {
+                    // 确定性窗户
+                    if ((x + y) % 3 !== 0) {
+                        g.fillRect(x + 5, y, 10, 14);
                     }
-                    if (Math.random() > 0.4) {
-                        g.fillRect(x + 28, y, 12, 15);
+                    if ((x + y + 1) % 3 !== 0) {
+                        g.fillRect(x + bw - 15, y, 10, 14);
                     }
                 }
-                g.fillStyle(0x5a3a3a);
+                g.fillStyle(0xFF6B6B);
+                g.fillRect(x + bw / 2 - 3, buildingTop - 8, 6, 8);
+            }
+            // 激光束
+            g.fillStyle(0x00FFFF);
+            for (let x = 0; x < w; x += 200) {
+                g.fillRect(x, 100, 4, 100);
             }
         });
 
-        this.generateTexture('bg_ground', 1280, 720, (g, w, h) => {
-            // 地面 - 暖色调石板
-            g.fillStyle(0x6b4a3a);
-            g.fillRect(0, h - 100, w, 100);
-
-            // 石板纹理
-            g.lineStyle(1, 0x5a3a2a);
+        this.generateTexture('bg2_road', 1280, 720, (g, w) => {
+            // 道路 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            g.fillStyle(0x3a3a4a);
+            g.fillRect(0, 0, w, 140);
+            g.fillStyle(0x5a5a6a);
             for (let x = 0; x < w; x += 50) {
-                g.moveTo(x, h - 100);
-                g.lineTo(x, h);
+                g.fillRect(x, 65, 30, 8);
             }
-            for (let y = h - 100; y < h; y += 25) {
-                g.moveTo(0, y);
-                g.lineTo(w, y);
+            g.fillStyle(0xFFE55C);
+            for (let x = 0; x < w; x += 300) {
+                g.fillRect(x, 10, 8, 120);
+                g.fillStyle(0xFFFFFF, 0.3);
+                g.fillCircle(x + 4, 10, 15);
+                g.fillStyle(0xFFE55C);
+            }
+        });
+
+        // 第三关：皇宫大殿
+        this.generateTexture('bg3_sky', 1280, 720, (g, w, h) => {
+            for (let i = 0; i < h; i++) {
+                const ratio = i / h;
+                const r = Math.floor(180 - ratio * 60);
+                const gVal = Math.floor(30 - ratio * 20);
+                const b = Math.floor(30 - ratio * 20);
+                g.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b));
+                g.fillRect(0, i, w, 1);
+            }
+            // 确定性金星生成
+            g.fillStyle(0xFFD700);
+            for (let i = 0; i < 30; i++) {
+                const sx = ((i * 191) % 1280);
+                const sy = ((i * 257) % 288);
+                const size = 1.5 + (i % 3) * 0.5;
+                g.fillCircle(sx, sy, size);
+            }
+        });
+
+        this.generateTexture('bg3_wall', 1280, 720, (g, w) => {
+            // 宫墙层 - tileSprite在y=100，显示纹理0-620区域，内容画在顶部0-200
+            g.fillStyle(0x8B0000);
+            g.fillRect(0, 170, w, 50);
+            g.fillStyle(0xA52A2A);
+            for (let x = 0; x < w; x += 40) {
+                g.fillRect(x, 175, 3, 40);
+            }
+            g.fillStyle(0xFFD700);
+            for (let x = 0; x < w; x += 200) {
+                g.fillRect(x - 3, 180, 6, 15);
+            }
+            g.fillStyle(0x8B4513);
+            g.fillRect(0, 210, w, 10);
+        });
+
+        this.generateTexture('bg3_palace', 1280, 720, (g, w) => {
+            // 宫殿层 - tileSprite在y=200，显示纹理0-520区域，内容画在顶部0-300
+            for (let x = 0; x < w; x += 200) {
+                const bw = 140 + ((x * 7) % 60);
+                const bh = 120 + ((x * 11) % 80);
+                const palaceBase = 300; // 宫殿底部位置
+                g.fillStyle(0xCD5C5C);
+                g.fillRect(x, palaceBase - bh, bw, bh);
+                g.fillStyle(0xFFD700);
+                g.fillRect(x - 5, palaceBase - bh, bw + 10, 8);
+                g.fillStyle(0x8B0000);
+                g.beginPath();
+                g.moveTo(x - 10, palaceBase - bh);
+                g.lineTo(x + bw / 2, palaceBase - bh - 50);
+                g.lineTo(x + bw + 10, palaceBase - bh);
+                g.closePath();
+                g.fillPath();
+                g.fillStyle(0xFF6347);
+                for (let y = 0; y < 3; y++) {
+                    g.fillRect(x + 20 + y * 30, palaceBase - bh + 20, 20, 25);
+                }
+            }
+            g.fillStyle(0xFFD700);
+            for (let x = 0; x < w; x += 150) {
+                g.fillCircle(x, 270, 12);
+            }
+        });
+
+        this.generateTexture('bg3_ground', 1280, 720, (g, w) => {
+            // 御道层 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            g.fillStyle(0x696969);
+            g.fillRect(0, 0, w, 140);
+            g.lineStyle(2, 0x505050);
+            for (let x = 0; x < w; x += 60) {
+                g.moveTo(x, 0);
+                g.lineTo(x + 30, 140);
             }
             g.strokePath();
-        });
-
-        // 村庄/城市/宫殿背景 - 现代化设计
-        ['bg_village', 'bg_city', 'bg_palace'].forEach((key, index) => {
-            this.generateTexture(key, 2048, 512, (g, w, h) => {
-                // 天空渐变 - 不同关卡不同色调
-                const skyColors = [
-                    { r: 255, g: 200, b: 150 }, // 村庄 - 暖橙色
-                    { r: 80, g: 40, b: 80 },    // 城市 - 紫色调夜晚
-                    { r: 180, g: 30, b: 30 },   // 宫殿 - 深红色
-                ][index];
-
-                for (let i = 0; i < h; i++) {
-                    const ratio = i / h;
-                    const r = Math.floor(skyColors.r * (1 - ratio * 0.6));
-                    const gVal = Math.floor(skyColors.g * (1 - ratio * 0.5));
-                    const b = Math.floor(skyColors.b * (1 - ratio * 0.4));
-                    g.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b));
-                    g.fillRect(0, i, w, 1);
-                }
-
-                // 地面
-                g.fillStyle(0x8B5a4a);
-                g.fillRect(0, h - 60, w, 60);
-            });
+            g.fillStyle(0xDAA520);
+            for (let x = 0; x < w; x += 400) {
+                g.fillRect(x - 20, 30, 40, 80);
+            }
         });
 
         // UI 元素
@@ -676,7 +815,10 @@ export class BootScene extends Scene {
 
     private generateTexture(key: string, width: number, height: number,
         drawFn: (g: Phaser.GameObjects.Graphics, w: number, h: number) => void): void {
-        if (this.textures.exists(key)) return;
+        // 如果纹理已存在，先移除以确保重新生成
+        if (this.textures.exists(key)) {
+            this.textures.remove(key);
+        }
 
         const graphics = this.add.graphics();
         drawFn(graphics, width, height);
@@ -687,7 +829,10 @@ export class BootScene extends Scene {
     private generateSpriteSheet(key: string, frameWidth: number, frameHeight: number,
         frameCount: number,
         drawFn: (g: Phaser.GameObjects.Graphics, fw: number, fh: number, frameIndex: number) => void): void {
-        if (this.textures.exists(key)) return;
+        // 如果纹理已存在，先移除以确保重新生成
+        if (this.textures.exists(key)) {
+            this.textures.remove(key);
+        }
 
         const graphics = this.add.graphics();
         const totalWidth = frameWidth * frameCount;

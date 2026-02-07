@@ -74,7 +74,7 @@ export class GameScene extends Scene {
     }
 
     private createBackgrounds(): void {
-        const bgKeys = ['bg_sky', 'bg_mountains', 'bg_buildings', 'bg_ground'];
+        const bgKeys = this.levelConfig.bgLayers;
         const groundY = this.scale.height - 140;
         const yPositions = [0, 100, 200, groundY];
 

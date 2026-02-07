@@ -133,6 +133,7 @@ export const LEVELS: LevelConfig[] = [
         baseSpeed: 150,
         maxSpeed: 250,
         bgKey: 'bg_village',
+        bgLayers: ['bg1_sky', 'bg1_hills', 'bg1_houses', 'bg1_ground'],
     },
     {
         level: 2,
@@ -140,6 +141,7 @@ export const LEVELS: LevelConfig[] = [
         baseSpeed: 200,
         maxSpeed: 320,
         bgKey: 'bg_city',
+        bgLayers: ['bg2_sky', 'bg2_cityline', 'bg2_buildings', 'bg2_road'],
     },
     {
         level: 3,
@@ -147,6 +149,7 @@ export const LEVELS: LevelConfig[] = [
         baseSpeed: 250,
         maxSpeed: 400,
         bgKey: 'bg_palace',
+        bgLayers: ['bg3_sky', 'bg3_wall', 'bg3_palace', 'bg3_ground'],
         bossPhase: true,
     },
 ];
