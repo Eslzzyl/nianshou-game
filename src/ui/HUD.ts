@@ -7,11 +7,15 @@ export class HUD {
     private scoreText!: Phaser.GameObjects.Text;
     private livesContainer!: Phaser.GameObjects.Container;
     private redPacketText!: Phaser.GameObjects.Text;
+    private redPacketIcon!: Phaser.GameObjects.Text;
+    private redPacketHint!: Phaser.GameObjects.Text;
     private distanceText!: Phaser.GameObjects.Text;
     private energyBar!: Phaser.GameObjects.Graphics;
     private energyBg!: Phaser.GameObjects.Graphics;
     private energyGlow!: Phaser.GameObjects.Graphics;
     private panelBg!: Phaser.GameObjects.Graphics;
+    private rightPanel!: Phaser.GameObjects.Graphics;
+    private energyLabel!: Phaser.GameObjects.Text;
     private fpsText?: Phaser.GameObjects.Text;
     private shimmerLight?: Phaser.GameObjects.Graphics;
 
@@ -52,17 +56,23 @@ export class HUD {
     private createPanel(): void {
         // 主面板背景 - 半透明深色
         this.panelBg = this.scene.add.graphics();
+        this.rightPanel = this.scene.add.graphics();
+
+        this.redrawPanels(this.scene.scale.width);
+    }
+
+    private redrawPanels(width: number): void {
+        this.panelBg.clear();
         this.panelBg.fillStyle(COLORS.BG_WARM, 0.85);
         this.panelBg.fillRoundedRect(10, 10, 300, 140, 12);
         this.panelBg.lineStyle(2, COLORS.GOLD_PRIMARY);
         this.panelBg.strokeRoundedRect(10, 10, 300, 140, 12);
 
-        // 右上角面板
-        const rightPanel = this.scene.add.graphics();
-        rightPanel.fillStyle(COLORS.BG_WARM, 0.85);
-        rightPanel.fillRoundedRect(this.scene.scale.width - 200, 10, 190, 80, 12);
-        rightPanel.lineStyle(2, COLORS.GOLD_PRIMARY);
-        rightPanel.strokeRoundedRect(this.scene.scale.width - 200, 10, 190, 80, 12);
+        this.rightPanel.clear();
+        this.rightPanel.fillStyle(COLORS.BG_WARM, 0.85);
+        this.rightPanel.fillRoundedRect(width - 200, 10, 190, 80, 12);
+        this.rightPanel.lineStyle(2, COLORS.GOLD_PRIMARY);
+        this.rightPanel.strokeRoundedRect(width - 200, 10, 190, 80, 12);
     }
 
     private createLives(): void {
@@ -84,7 +94,7 @@ export class HUD {
         const x = this.scene.scale.width - 180;
 
         // 红包图标
-        this.scene.add.text(x, 25, '🧧', {
+        this.redPacketIcon = this.scene.add.text(x, 25, '🧧', {
             fontSize: '32px',
             resolution: UI_RESOLUTION,
         });
@@ -98,7 +108,7 @@ export class HUD {
         });
 
         // 提示文字
-        this.scene.add.text(x, 65, `收集${REDPACKET_THRESHOLD}个激活护盾`, {
+        this.redPacketHint = this.scene.add.text(x, 65, `收集${REDPACKET_THRESHOLD}个激活护盾`, {
             fontSize: '12px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
@@ -135,12 +145,48 @@ export class HUD {
         this.energyGlow = this.scene.add.graphics();
 
         // 标签
-        this.scene.add.text(this.scene.scale.width / 2, y - 28, '✨ 福气护体能量', {
+        this.energyLabel = this.scene.add.text(this.scene.scale.width / 2, y - 28, '✨ 福气护体能量', {
             fontSize: '14px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+    }
+
+    resize(width: number, height: number): void {
+        this.redrawPanels(width);
+
+        // 右上角红包信息
+        const x = width - 180;
+        this.redPacketIcon?.setPosition(x, 25);
+        this.redPacketText?.setPosition(x + 45, 32);
+        this.redPacketHint?.setPosition(x, 65);
+
+        // 中间距离
+        this.distanceText?.setPosition(width / 2, 25);
+
+        // 能量条背景与标签
+        const barX = width / 2 - 150;
+        const barY = height - 50;
+        const barWidth = 300;
+        const barHeight = 24;
+
+        this.energyBg?.clear();
+        this.energyBg?.fillStyle(0x2a1a1a, 0.9);
+        this.energyBg?.fillRoundedRect(barX, barY, barWidth, barHeight, 6);
+        this.energyBg?.lineStyle(2, COLORS.GOLD_PRIMARY);
+        this.energyBg?.strokeRoundedRect(barX, barY, barWidth, barHeight, 6);
+
+        this.energyLabel?.setPosition(width / 2, barY - 28);
+
+        // FPS
+        this.fpsText?.setPosition(width - 10, height - 10);
+
+        // 流光对象销毁，避免 resize 后 tween 位置不匹配
+        if (this.shimmerLight) {
+            this.shimmerLight.destroy();
+            this.shimmerLight = undefined;
+        }
     }
 
     update(score: number, lives: number, redPackets: number, distance: number, maxDistance: number): void {

@@ -14,10 +14,10 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
         },
     },
     scale: {
-        // Always fill the available browser window while preserving aspect ratio.
-        // This may crop a little on non-16:9 screens (e.g. 16:10), but avoids letterboxing.
-        mode: Phaser.Scale.ENVELOP,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
+        // Fill the window without letterboxing (no dark bars).
+        // With RESIZE the game size follows the container, so scenes must respond to resize.
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.NO_CENTER,
         width: GAME_WIDTH,
         height: GAME_HEIGHT,
     },

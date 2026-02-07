@@ -25,7 +25,7 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
         this.setSize(40, 40);
 
         this.startY = y;
-        this.startTime = Date.now();
+        this.startTime = scene.time.now;
     }
 
     private getConfig(): ItemConfig {
@@ -52,7 +52,7 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
         this.x = Math.floor(this.x);
 
         // 计算浮动效果，使用正弦函数
-        const elapsed = Date.now() - this.startTime;
+        const elapsed = this.scene.time.now - this.startTime;
         this.y = this.startY + Math.sin(elapsed * 0.003) * 10;
 
         if (this.x < -50) {

@@ -185,6 +185,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
+        // 地面/空中模式下也需要持续响应水平按键（避免只转向不移动、必须松开再按）。
+        if (this.currentState !== 'FLYING') {
+            const inputManager = InputManager.getInstance();
+            const leftPressed = inputManager.isLeftPressed();
+            const rightPressed = inputManager.isRightPressed();
+
+            if (leftPressed && !rightPressed) {
+                this.moveLeft();
+            } else if (rightPressed && !leftPressed) {
+                this.moveRight();
+            } else {
+                this.stopMoveX();
+            }
+        }
+
         // 边界检查
         this.clampPosition();
 
@@ -353,6 +368,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     activateFly(): void {
+        // 可能在飞行模式下再次拾取：先清理旧翅膀，避免残留在原地。
+        this.wingSprite?.destroy();
+        this.wingSprite = undefined;
+
         this.setPlayerState('FLYING');
         this.flyTimer = PLAYER.FLY_DURATION;
         this.setGravityY(0);

@@ -40,6 +40,10 @@ export class GameScene extends Scene {
     isPaused = false;
     isGameOver = false;
 
+    private ground?: Phaser.Physics.Arcade.StaticGroup;
+    private groundSprite?: Phaser.GameObjects.Rectangle;
+    private static readonly GROUND_HEIGHT = 140;
+
     constructor(config?: Phaser.Types.Scenes.SettingsConfig) {
         super(config || { key: 'GameScene' });
     }
@@ -52,6 +56,10 @@ export class GameScene extends Scene {
         this.isGameOver = false;
         this.isPaused = false;
 
+        // 场景可能会被 restart() 复用：清理数组引用，避免二次进入后索引越界导致 NaN。
+        this.petals = [];
+        this.backgrounds = [];
+
         ScoreManager.getInstance().resetLevel(this.level);
         ScoreManager.getInstance().setCurrentLevel(this.level);
     }
@@ -60,6 +68,16 @@ export class GameScene extends Scene {
         AudioManager.getInstance().init(this);
         InputManager.getInstance().init(this);
         ParticleManager.getInstance().init(this);
+
+        // 自适应窗口尺寸（Scale.RESIZE）
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        // 当从暂停场景恢复时，确保逻辑层的暂停标记同步。
+        this.events.off(Phaser.Scenes.Events.RESUME);
+        this.events.on(Phaser.Scenes.Events.RESUME, () => {
+            this.isPaused = false;
+        });
 
         this.createBackgrounds();
         this.createPlayer();
@@ -71,11 +89,14 @@ export class GameScene extends Scene {
         this.createDecorations();
 
         this.setupPauseHandler();
+
+        // 首次创建后同步一次尺寸
+        this.onResize({ width: this.scale.width, height: this.scale.height } as Phaser.Structs.Size);
     }
 
     private createBackgrounds(): void {
         const bgKeys = this.levelConfig.bgLayers;
-        const groundY = this.scale.height - 140;
+        const groundY = this.scale.height - GameScene.GROUND_HEIGHT;
         const yPositions = [0, 100, 200, groundY];
 
         for (let i = 0; i < bgKeys.length; i++) {
@@ -124,7 +145,7 @@ export class GameScene extends Scene {
     }
 
     private createPlayer(): void {
-        const playerY = this.scale.height - 140 - PLAYER.HEIGHT / 2;
+        const playerY = this.scale.height - GameScene.GROUND_HEIGHT - PLAYER.HEIGHT / 2;
         this.player = new Player(this, PLAYER.X, playerY);
     }
 
@@ -138,15 +159,24 @@ export class GameScene extends Scene {
     }
 
     private createCollisions(): void {
-        const ground = this.physics.add.staticGroup();
-        const groundTop = this.scale.height - 140;
-        const groundHeight = 140;
+        this.ground = this.physics.add.staticGroup();
+        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
+        const groundHeight = GameScene.GROUND_HEIGHT;
         const groundY = groundTop + groundHeight / 2;
-        const groundSprite = this.add.rectangle(this.scale.width / 2, groundY, this.scale.width, groundHeight, 0x000000, 0);
-        this.physics.add.existing(groundSprite, true);
-        ground.add(groundSprite);
+        this.groundSprite = this.add.rectangle(
+            this.scale.width / 2,
+            groundY,
+            this.scale.width,
+            groundHeight,
+            0x000000,
+            0
+        );
+        this.physics.add.existing(this.groundSprite, true);
+        this.ground.add(this.groundSprite);
 
-        this.physics.add.collider(this.player, ground);
+        this.physics.world.setBounds(0, 0, this.scale.width, this.scale.height);
+
+        this.physics.add.collider(this.player, this.ground);
 
         this.physics.add.overlap(
             this.player,
@@ -241,7 +271,7 @@ export class GameScene extends Scene {
 
     private createVirtualButtons(): void {
         this.virtualButtons = new VirtualButtons(this);
-        
+
         if (this.virtualButtons.hasJoystick()) {
             this.virtualButtons.onJoystickMove((x: number, y: number) => {
                 if (this.isPaused || this.isGameOver) return;
@@ -282,11 +312,15 @@ export class GameScene extends Scene {
     private togglePause(): void {
         if (this.isGameOver) return;
 
-        this.isPaused = !this.isPaused;
-
-        if (this.isPaused) {
+        // 支持从 ESC 进入/退出暂停
+        if (!this.isPaused) {
+            this.isPaused = true;
             this.scene.launch('PauseScene');
             this.scene.pause();
+        } else {
+            this.isPaused = false;
+            this.scene.stop('PauseScene');
+            this.scene.resume();
         }
     }
 
@@ -313,12 +347,14 @@ export class GameScene extends Scene {
 
     private updateDecorations(): void {
         // 更新飘落的花瓣
-        const time = Date.now() / 1000;
-        this.petals.forEach(graphics => {
+        const time = this.time.now / 1000;
+        const dt = this.game.loop.delta / 1000;
+
+        for (const graphics of this.petals) {
             const petal = graphics.getData('petal');
             if (petal) {
-                petal.y += petal.speedY * 0.016;
-                petal.x += petal.speedX * 0.016 + Math.sin(time + petal.wobble) * 0.3;
+                petal.y += petal.speedY * dt;
+                petal.x += petal.speedX * dt + Math.sin(time + petal.wobble) * 0.3;
 
                 if (petal.y > this.scale.height) {
                     petal.y = -10;
@@ -330,7 +366,7 @@ export class GameScene extends Scene {
 
                 graphics.setPosition(petal.x, petal.y);
             }
-        });
+        }
     }
 
     private updateObstacles(dt: number): void {
@@ -360,7 +396,8 @@ export class GameScene extends Scene {
         const speeds = [0.1, 0.3, 0.6, 1.0];
 
         for (let i = 0; i < this.backgrounds.length; i++) {
-            this.backgrounds[i].tilePositionX += this.scrollSpeed * speeds[i] * (delta / 1000);
+            const speed = speeds[i] ?? speeds[speeds.length - 1];
+            this.backgrounds[i].tilePositionX += this.scrollSpeed * speed * (delta / 1000);
         }
     }
 
@@ -377,7 +414,7 @@ export class GameScene extends Scene {
     private spawnObstacle(): void {
         const x = this.scale.width + 100;
         const type = Math.random();
-        const groundTop = this.scale.height - 140;
+        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
 
         if (type < 0.6) {
             const firecrackerType = Math.random() < 0.7 ? 'ground' : 'air';
@@ -502,6 +539,48 @@ export class GameScene extends Scene {
         this.scene.start('GameOverScene', {
             score: ScoreManager.getInstance().getScore(),
             distance: Math.floor(this.distance),
+            level: this.level,
+            fromSceneKey: this.sys.settings.key,
         });
+    }
+
+    private onResize(gameSize: Phaser.Structs.Size): void {
+        const width = Math.max(1, Math.floor(gameSize.width));
+        const height = Math.max(1, Math.floor(gameSize.height));
+
+        this.physics.world.setBounds(0, 0, width, height);
+
+        // 更新背景
+        const groundY = height - GameScene.GROUND_HEIGHT;
+        const yPositions = [0, 100, 200, groundY];
+        for (let i = 0; i < this.backgrounds.length; i++) {
+            const bg = this.backgrounds[i];
+            bg.setPosition(width / 2, yPositions[i] ?? 0);
+            bg.setSize(width, i === 3 ? GameScene.GROUND_HEIGHT : height);
+        }
+
+        // 更新地面碰撞体
+        if (this.groundSprite?.body) {
+            const groundHeight = GameScene.GROUND_HEIGHT;
+            const groundYCenter = (height - groundHeight) + groundHeight / 2;
+            this.groundSprite.setPosition(width / 2, groundYCenter);
+            this.groundSprite.setSize(width, groundHeight);
+            (this.groundSprite.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
+        }
+
+        // HUD/虚拟按键
+        this.hud?.resize(width, height);
+        this.virtualButtons?.resize(width, height);
+
+        // 玩家位置防溢出
+        if (this.player) {
+            const minX = 32;
+            const maxX = width - 32;
+            this.player.x = Phaser.Math.Clamp(this.player.x, minX, maxX);
+            if (this.player.getPlayerState() !== 'FLYING') {
+                const playerY = height - GameScene.GROUND_HEIGHT - PLAYER.HEIGHT / 2;
+                this.player.y = Math.min(this.player.y, playerY);
+            }
+        }
     }
 }

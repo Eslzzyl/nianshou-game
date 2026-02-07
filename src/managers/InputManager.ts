@@ -25,7 +25,7 @@ export class InputManager {
     private onLeftCallback: (() => void) | null = null;
     private onRightCallback: (() => void) | null = null;
 
-    private constructor() {}
+    private constructor() { }
 
     static getInstance(): InputManager {
         if (!InputManager.instance) {
@@ -53,9 +53,15 @@ export class InputManager {
     private setupTouchInput(): void {
         if (!this.scene) return;
 
-        const width = this.scene.scale.width;
+        let lastClickTime = 0;
+        let lastClickX = 0;
+        let clickCount = 0;
+        let clickTimer: Phaser.Time.TimerEvent | null = null;
 
         this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            const width = this.scene?.scale.width ?? 0;
+
+            // 左半屏跳跃 / 右半屏下蹲
             if (pointer.x < width / 2) {
                 this.jumpPressed = true;
                 this.onJumpCallback?.();
@@ -63,22 +69,8 @@ export class InputManager {
                 this.duckPressed = true;
                 this.onDuckCallback?.();
             }
-        });
 
-        this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-            if (pointer.x < width / 2) {
-                this.jumpPressed = false;
-            } else {
-                this.duckPressed = false;
-            }
-        });
-
-        let lastClickTime = 0;
-        let lastClickX = 0;
-        let clickCount = 0;
-        let clickTimer: Phaser.Time.TimerEvent | null = null;
-
-        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            // 双击激活
             const currentTime = Date.now();
             const timeDiff = currentTime - lastClickTime;
             const distance = Math.abs(pointer.x - lastClickX);
@@ -107,6 +99,15 @@ export class InputManager {
             clickTimer = this.scene?.time.delayedCall(300, () => {
                 clickCount = 0;
             }) || null;
+        });
+
+        this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+            const width = this.scene?.scale.width ?? 0;
+            if (pointer.x < width / 2) {
+                this.jumpPressed = false;
+            } else {
+                this.duckPressed = false;
+            }
         });
     }
 

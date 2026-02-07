@@ -45,19 +45,21 @@ export class VirtualButtons {
         // 摇杆底座
         this.joystickBase = this.scene.add.graphics();
         this.joystickBase.fillStyle(0xFFFFFF, 0.2);
-        this.joystickBase.fillCircle(x, y, this.joystickRadius);
+        this.joystickBase.fillCircle(0, 0, this.joystickRadius);
         this.joystickBase.lineStyle(3, 0xFFFFFF, 0.5);
-        this.joystickBase.strokeCircle(x, y, this.joystickRadius);
+        this.joystickBase.strokeCircle(0, 0, this.joystickRadius);
+        this.joystickBase.setPosition(x, y);
 
         // 摇杆手柄
         this.joystickKnob = this.scene.add.graphics();
         this.joystickKnob.fillStyle(0xFFFFFF, 0.6);
-        this.joystickKnob.fillCircle(x, y, 35);
+        this.joystickKnob.fillCircle(0, 0, 35);
         this.joystickKnob.lineStyle(3, 0xFFFFFF, 0.8);
-        this.joystickKnob.strokeCircle(x, y, 35);
+        this.joystickKnob.strokeCircle(0, 0, 35);
+        this.joystickKnob.setPosition(x, y);
 
         // 设置交互区域
-        const hitArea = new Phaser.Geom.Circle(x, y, this.joystickRadius);
+        const hitArea = new Phaser.Geom.Circle(0, 0, this.joystickRadius);
         this.joystickBase.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
 
         // 触摸事件
@@ -205,6 +207,21 @@ export class VirtualButtons {
 
     showActivateButton(show: boolean): void {
         this.activateBtn.setVisible(show);
+    }
+
+    resize(width: number, height: number): void {
+        if (!this.hasJoystick()) return;
+
+        // 摇杆固定在左下
+        this.joystickCenterX = 120;
+        this.joystickCenterY = height - 120;
+        this.joystickBase.setPosition(this.joystickCenterX, this.joystickCenterY);
+        this.joystickKnob.setPosition(this.joystickCenterX, this.joystickCenterY);
+
+        // 按钮固定在底部
+        this.jumpBtn?.setPosition(100, height - 100);
+        this.duckBtn?.setPosition(width - 100, height - 100);
+        this.activateBtn?.setPosition(width / 2, height - 180);
     }
 
     destroy(): void {

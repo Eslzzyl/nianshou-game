@@ -10,6 +10,8 @@ export class PauseScene extends Scene {
     create(): void {
         this.createOverlay();
         this.createMenu();
+
+        this.input.keyboard?.on('keydown-ESC', () => this.resumeGame());
     }
 
     private createOverlay(): void {
@@ -77,6 +79,11 @@ export class PauseScene extends Scene {
     }
 
     private resumeGame(): void {
+        const gameScene = this.scene.get('GameScene') as unknown as { isPaused?: boolean };
+        const bossScene = this.scene.get('BossScene') as unknown as { isPaused?: boolean };
+        gameScene.isPaused = false;
+        bossScene.isPaused = false;
+
         this.scene.stop();
         this.scene.resume('GameScene');
         this.scene.resume('BossScene');
@@ -87,10 +94,17 @@ export class PauseScene extends Scene {
         const gameScene = this.scene.get('GameScene');
         const bossScene = this.scene.get('BossScene');
 
-        if (gameScene.scene.isActive()) {
-            gameScene.scene.restart();
-        } else if (bossScene.scene.isActive()) {
-            bossScene.scene.restart();
+        if (gameScene.scene.isActive() || gameScene.scene.isPaused()) {
+            const currentLevel = (gameScene as unknown as { level?: number }).level || 1;
+            this.scene.stop('GameScene');
+            this.scene.start('GameScene', { level: currentLevel });
+            return;
+        }
+
+        if (bossScene.scene.isActive() || bossScene.scene.isPaused()) {
+            const currentLevel = (bossScene as unknown as { level?: number }).level || 1;
+            this.scene.stop('BossScene');
+            this.scene.start('BossScene', { level: currentLevel });
         }
     }
 

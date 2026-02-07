@@ -1,16 +1,22 @@
 import { Scene } from 'phaser';
 import { SaveManager } from '../managers/SaveManager.js';
+import { ScoreManager } from '../managers/ScoreManager.js';
+import type { LevelType } from '../types/index.js';
 import { UIComponents } from '../ui/UIComponents.js';
 import { STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 interface GameOverData {
     score: number;
     distance: number;
+    level?: LevelType;
+    fromSceneKey?: string;
 }
 
 export class GameOverScene extends Scene {
     private score = 0;
     private distance = 0;
+    private level?: LevelType;
+    private fromSceneKey?: string;
 
     constructor() {
         super({ key: 'GameOverScene' });
@@ -19,6 +25,8 @@ export class GameOverScene extends Scene {
     init(data: GameOverData): void {
         this.score = data.score;
         this.distance = data.distance;
+        this.level = data.level;
+        this.fromSceneKey = data.fromSceneKey;
     }
 
     create(): void {
@@ -156,13 +164,9 @@ export class GameOverScene extends Scene {
     }
 
     private restartGame(): void {
-        const gameScene = this.scene.get('GameScene');
-        if (gameScene) {
-            const currentLevel = (gameScene as unknown as { level?: number }).level || 1;
-            this.scene.start('GameScene', { level: currentLevel });
-        } else {
-            this.scene.start('MenuScene');
-        }
+        const currentLevel = (this.level ?? ScoreManager.getInstance().getCurrentLevel()) as LevelType;
+        const sceneKey = this.fromSceneKey === 'BossScene' ? 'BossScene' : 'GameScene';
+        this.scene.start(sceneKey, { level: currentLevel });
     }
 
     private returnToMenu(): void {
