@@ -37,6 +37,10 @@ export class Firecracker extends Obstacle {
     }
 
     private setupPhysics(): void {
+        if (!this.body) {
+            console.warn('Firecracker: body is undefined in setupPhysics');
+            return;
+        }
         if (this.config.type === 'ground') {
             // ground type should use spawn Y provided by spawner (avoid hardcoded 600)
             this.setSize(40, 60);
@@ -46,6 +50,10 @@ export class Firecracker extends Obstacle {
     }
 
     private createAnimations(): void {
+        if (!this.scene) {
+            console.warn('Firecracker: scene is undefined in createAnimations');
+            return;
+        }
         const anims = this.scene.anims;
 
         if (!anims.exists('firecracker_idle')) {
@@ -74,7 +82,7 @@ export class Firecracker extends Obstacle {
     }
 
     private getAnimationFrames(key: string, maxFrames: number): Phaser.Types.Animations.AnimationFrame[] {
-        if (!this.scene.textures.exists(key)) {
+        if (!this.scene || !this.scene.textures.exists(key)) {
             return [];
         }
 

@@ -9,6 +9,7 @@ import { SpringWord } from '../objects/SpringWord.js';
 interface PoolableObject {
     active: boolean;
     visible: boolean;
+    scene?: Phaser.Scene;
     body?: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | null;
     setActive(active: boolean): unknown;
     setVisible(visible: boolean): unknown;
@@ -51,6 +52,16 @@ export class ObjectPoolManager {
         return this.pools.get(key) as T[];
     }
 
+    private ensureBody(obj: PoolableObject, scene: Phaser.Scene): void {
+        if (!obj.body && scene.physics) {
+            try {
+                scene.physics.add.existing(obj as unknown as Phaser.GameObjects.GameObject);
+            } catch (e) {
+                console.warn('ObjectPoolManager: failed to ensure body:', e);
+            }
+        }
+    }
+
     getFirecracker(
         scene: Scene,
         x: number,
@@ -58,9 +69,10 @@ export class ObjectPoolManager {
         config: Partial<FirecrackerConfig> = {}
     ): Firecracker {
         const pool = this.getPool<Firecracker>('firecracker');
-        
+
         for (const obj of pool) {
             if (!obj.active) {
+                this.ensureBody(obj, scene);
                 obj.setActive(true);
                 obj.setVisible(true);
                 obj.reset(x, y, config);
@@ -69,7 +81,7 @@ export class ObjectPoolManager {
         }
 
         const firecracker = new Firecracker(scene, x, y, config);
-        
+
         if (pool.length < this.maxPoolSize) {
             pool.push(firecracker);
         }
@@ -84,9 +96,10 @@ export class ObjectPoolManager {
         config: Partial<LanternConfig> = {}
     ): Lantern {
         const pool = this.getPool<Lantern>('lantern');
-        
+
         for (const obj of pool) {
             if (!obj.active) {
+                this.ensureBody(obj, scene);
                 obj.setActive(true);
                 obj.setVisible(true);
                 obj.reset(x, y, config);
@@ -95,7 +108,7 @@ export class ObjectPoolManager {
         }
 
         const lantern = new Lantern(scene, x, y, config);
-        
+
         if (pool.length < this.maxPoolSize) {
             pool.push(lantern);
         }
@@ -111,9 +124,10 @@ export class ObjectPoolManager {
     ): FuCharacter {
         const poolKey = `fu_${type}`;
         const pool = this.getPool<FuCharacter>(poolKey);
-        
+
         for (const obj of pool) {
             if (!obj.active) {
+                this.ensureBody(obj, scene);
                 obj.setActive(true);
                 obj.setVisible(true);
                 obj.reset(x, y, type);
@@ -122,7 +136,7 @@ export class ObjectPoolManager {
         }
 
         const fu = new FuCharacter(scene, x, y, type);
-        
+
         if (pool.length < this.maxPoolSize) {
             pool.push(fu);
         }
@@ -132,9 +146,10 @@ export class ObjectPoolManager {
 
     getRedPacket(scene: Scene, x: number, y: number): RedPacket {
         const pool = this.getPool<RedPacket>('redpacket');
-        
+
         for (const obj of pool) {
             if (!obj.active) {
+                this.ensureBody(obj, scene);
                 obj.setActive(true);
                 obj.setVisible(true);
                 obj.reset(x, y);
@@ -143,7 +158,7 @@ export class ObjectPoolManager {
         }
 
         const packet = new RedPacket(scene, x, y);
-        
+
         if (pool.length < this.maxPoolSize) {
             pool.push(packet);
         }
@@ -153,9 +168,10 @@ export class ObjectPoolManager {
 
     getSpringWord(scene: Scene, x: number, y: number): SpringWord {
         const pool = this.getPool<SpringWord>('springword');
-        
+
         for (const obj of pool) {
             if (!obj.active) {
+                this.ensureBody(obj, scene);
                 obj.setActive(true);
                 obj.setVisible(true);
                 obj.reset(x, y);
@@ -164,7 +180,7 @@ export class ObjectPoolManager {
         }
 
         const word = new SpringWord(scene, x, y);
-        
+
         if (pool.length < this.maxPoolSize) {
             pool.push(word);
         }

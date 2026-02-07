@@ -31,7 +31,9 @@ export class Lantern extends Obstacle {
         this.startY = this.y;
         this.glowStartTime = this.scene?.time.now ?? 0;
 
-        this.setSize(60, 80);
+        if (this.body) {
+            this.setSize(60, 80);
+        }
         this.setupGlow();
     }
 
@@ -50,6 +52,10 @@ export class Lantern extends Obstacle {
     }
 
     private setupGlow(): void {
+        if (!this.scene) {
+            console.warn('Lantern: scene is undefined in setupGlow');
+            return;
+        }
         if (!this.glowSprite) {
             if (!this.scene.textures.exists('lantern_glow')) {
                 const glow = this.scene.add.graphics();

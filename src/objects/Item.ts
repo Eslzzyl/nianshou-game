@@ -21,9 +21,11 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.body.allowGravity = false;
-        this.body.moves = false;
-        this.body.setSize(40, 40, true);
+        if (this.body) {
+            this.body.allowGravity = false;
+            this.body.moves = false;
+            this.body.setSize(40, 40, true);
+        }
 
         this.startY = y;
         this.startTime = scene.time.now;
@@ -96,6 +98,8 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
         this.startTime = this.scene?.time.now ?? 0;
         this.alpha = 1;
         this.scale = 1;
-        this.body.enable = true;
+        if (this.body) {
+            this.body.enable = true;
+        }
     }
 }

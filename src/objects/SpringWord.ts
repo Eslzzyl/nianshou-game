@@ -22,6 +22,10 @@ export class SpringWord extends Item {
     }
 
     private createAnimation(): void {
+        if (!this.scene) {
+            console.warn('SpringWord: scene is undefined in createAnimation');
+            return;
+        }
         const anims = this.scene.anims;
         const textures = this.scene.textures;
 

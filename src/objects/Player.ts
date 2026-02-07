@@ -29,6 +29,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private createAnimations(): void {
+        if (!this.scene) {
+            console.warn('Player: scene is undefined in createAnimations');
+            return;
+        }
         const anims = this.scene.anims;
 
         // 奔跑动画
@@ -102,7 +106,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private getAnimationFrames(key: string, maxFrames: number): Phaser.Types.Animations.AnimationFrame[] {
-        if (!this.scene.textures.exists(key)) {
+        if (!this.scene || !this.scene.textures.exists(key)) {
             return [];
         }
 
@@ -224,6 +228,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private handleStateAnimation(): void {
         // 只有在动画存在时才播放
+        if (!this.scene) return;
         switch (this.currentState) {
             case 'RUNNING':
             case 'INVINCIBLE':
@@ -359,12 +364,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         this.setPlayerState('HURT');
-        if (this.scene.anims.exists('hurt')) {
+        if (this.scene?.anims.exists('hurt')) {
             this.safePlay('hurt');
         }
         this.setVelocityY(-200);
 
-        this.scene.time.delayedCall(500, () => {
+        this.scene?.time.delayedCall(500, () => {
             if (this.currentState === 'HURT') {
                 this.setPlayerState('RUNNING');
             }
@@ -391,7 +396,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.setGravityY(0);
         this.setVelocityY(0);
 
-        if (this.scene.textures.exists('spring_word')) {
+        if (this.scene?.textures.exists('spring_word')) {
             this.wingSprite = this.scene.add.sprite(this.x, this.y, 'spring_word');
             if (this.scene.anims.exists('spring_spin')) {
                 this.wingSprite.play('spring_spin');
