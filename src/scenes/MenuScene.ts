@@ -195,20 +195,39 @@ export class MenuScene extends Scene {
 
         // 灯笼主体
         const lantern = this.add.graphics();
-        lantern.fillStyle(COLORS.RED_PRIMARY, 1);
-        lantern.fillEllipse(0, 20, 50, 60);
-        lantern.fillStyle(COLORS.GOLD_PRIMARY, 1);
-        lantern.fillEllipse(0, 20, 35, 45);
-        lantern.fillStyle(COLORS.RED_PRIMARY, 1);
-        lantern.fillEllipse(0, 20, 20, 30);
 
-        // 顶部
+        // 外圈红色主体
+        lantern.fillStyle(COLORS.RED_PRIMARY, 1);
+        lantern.fillEllipse(0, 20, 60, 50);
+
+        // 内部发光效果 - 红色亮部
+        lantern.fillStyle(COLORS.RED_LIGHT, 0.6);
+        lantern.fillEllipse(0, 20, 45, 38);
+
+        // 中心金色亮光
+        lantern.fillStyle(COLORS.GOLD_PRIMARY, 0.4);
+        lantern.fillEllipse(0, 20, 28, 24);
+
+        // 顶部悬挂杆
         lantern.fillStyle(COLORS.GOLD_DARK, 1);
-        lantern.fillRect(-8, -15, 16, 15);
+        lantern.fillRect(-4, -12, 8, 15);
 
-        // 流苏
+        // 顶部圆形装饰
         lantern.fillStyle(COLORS.GOLD_PRIMARY, 1);
-        lantern.fillRect(-2, 50, 4, 20);
+        lantern.fillCircle(0, -8, 6);
+
+        // 底部流苏 - 多根线条
+        lantern.fillStyle(COLORS.GOLD_PRIMARY, 1);
+        for (let i = -1; i <= 1; i++) {
+            const length = 15 + Math.abs(i) * 3;
+            lantern.fillRect(i * 5 - 1.5, 48, 3, length);
+        }
+
+        // 中心装饰图案 - 金色圆环
+        lantern.fillStyle(COLORS.GOLD_PRIMARY, 1);
+        lantern.fillCircle(0, 20, 12);
+        lantern.fillStyle(COLORS.RED_PRIMARY, 1);
+        lantern.fillCircle(0, 20, 8);
 
         container.add(lantern);
 
