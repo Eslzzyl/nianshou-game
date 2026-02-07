@@ -606,7 +606,7 @@ export class MenuScene extends Scene {
         const panel = UIComponents.createScrollPanel(this, this.scale.width / 2, this.scale.height / 2, 640, 560);
 
         // 标题
-        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 240, '📖 游戏指南', {
+        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 240, '游戏指南', {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -621,7 +621,7 @@ export class MenuScene extends Scene {
         const contentElements: Phaser.GameObjects.GameObject[] = [];
 
         // ========== 物品图鉴 ==========
-        const itemsTitle = this.add.text(contentX, contentY, '🎁 可收集物品', {
+        const itemsTitle = this.add.text(contentX, contentY, '可收集物品', {
             fontSize: '20px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -632,24 +632,21 @@ export class MenuScene extends Scene {
 
         // 福字物品
         const fuItems = [
-            { icon: '🟫', name: '铜福', desc: '+10分', color: '#CD7F32' },
-            { icon: '⬜', name: '银福', desc: '+25分', color: '#C0C0C0' },
-            { icon: '🟨', name: '金福', desc: '+50分', color: '#FFD700' },
+            { texture: 'fu_copper', name: '铜福', desc: '+10分', color: '#CD7F32' },
+            { texture: 'fu_silver', name: '银福', desc: '+25分', color: '#C0C0C0' },
+            { texture: 'fu_gold', name: '金福', desc: '+50分', color: '#FFD700' },
         ];
 
         let rowY = contentY + 35;
         fuItems.forEach((item) => {
-            const icon = this.add.text(contentX + 10, rowY, item.icon, {
-                fontSize: '18px',
-                resolution: UI_RESOLUTION,
-            });
-            const name = this.add.text(contentX + 40, rowY, item.name, {
+            const icon = this.add.image(contentX + 24, rowY + 8, item.texture).setScale(0.5);
+            const name = this.add.text(contentX + 50, rowY, item.name, {
                 fontSize: '16px',
                 color: item.color,
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            const desc = this.add.text(contentX + 100, rowY, item.desc, {
+            const desc = this.add.text(contentX + 110, rowY, item.desc, {
                 fontSize: '14px',
                 color: '#AAAAAA',
                 fontFamily: STYLE.FONT.FAMILY,
@@ -661,17 +658,14 @@ export class MenuScene extends Scene {
 
         // 红包
         rowY += 5;
-        const packetIcon = this.add.text(contentX + 10, rowY, '🧧', {
-            fontSize: '18px',
-            resolution: UI_RESOLUTION,
-        });
-        const packetName = this.add.text(contentX + 40, rowY, '红包', {
+        const packetIcon = this.add.image(contentX + 24, rowY + 8, 'redpacket').setScale(0.5);
+        const packetName = this.add.text(contentX + 50, rowY, '红包', {
             fontSize: '16px',
             color: '#FF4444',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        const packetDesc = this.add.text(contentX + 100, rowY, '收集5个可激活无敌护盾（3秒）', {
+        const packetDesc = this.add.text(contentX + 110, rowY, '收集5个可激活无敌护盾（3秒）', {
             fontSize: '14px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
@@ -681,17 +675,14 @@ export class MenuScene extends Scene {
 
         // 春字
         rowY += 28;
-        const springIcon = this.add.text(contentX + 10, rowY, '🌸', {
-            fontSize: '18px',
-            resolution: UI_RESOLUTION,
-        });
-        const springName = this.add.text(contentX + 40, rowY, '春字', {
+        const springIcon = this.add.image(contentX + 24, rowY + 8, 'spring_word').setScale(0.5);
+        const springName = this.add.text(contentX + 50, rowY, '春字', {
             fontSize: '16px',
             color: '#00FF00',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        const springDesc = this.add.text(contentX + 100, rowY, '激活飞行模式5秒，可自由移动', {
+        const springDesc = this.add.text(contentX + 110, rowY, '激活飞行模式5秒，可自由移动', {
             fontSize: '14px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
@@ -701,7 +692,7 @@ export class MenuScene extends Scene {
 
         // ========== 障碍物图鉴 ==========
         rowY += 45;
-        const obstacleTitle = this.add.text(contentX, rowY, '⚠️ 障碍物（接触会受伤）', {
+        const obstacleTitle = this.add.text(contentX, rowY, '障碍物（接触会受伤）', {
             fontSize: '20px',
             color: '#FF4444',
             fontStyle: 'bold',
@@ -711,17 +702,14 @@ export class MenuScene extends Scene {
         contentElements.push(obstacleTitle);
 
         rowY += 35;
-        const firecrackerIcon = this.add.text(contentX + 10, rowY, '🧨', {
-            fontSize: '18px',
-            resolution: UI_RESOLUTION,
-        });
-        const firecrackerName = this.add.text(contentX + 40, rowY, '爆竹', {
+        const firecrackerIcon = this.add.image(contentX + 24, rowY + 8, 'firecracker').setScale(0.4);
+        const firecrackerName = this.add.text(contentX + 50, rowY, '爆竹', {
             fontSize: '16px',
             color: '#FF4444',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        const firecrackerDesc = this.add.text(contentX + 100, rowY, '地面/空中，静止或弹跳', {
+        const firecrackerDesc = this.add.text(contentX + 110, rowY, '地面/空中，静止或弹跳', {
             fontSize: '14px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
@@ -730,17 +718,14 @@ export class MenuScene extends Scene {
         contentElements.push(firecrackerIcon, firecrackerName, firecrackerDesc);
 
         rowY += 28;
-        const lanternIcon = this.add.text(contentX + 10, rowY, '🏮', {
-            fontSize: '18px',
-            resolution: UI_RESOLUTION,
-        });
-        const lanternName = this.add.text(contentX + 40, rowY, '灯笼', {
+        const lanternIcon = this.add.image(contentX + 24, rowY + 10, 'lantern').setScale(0.25);
+        const lanternName = this.add.text(contentX + 50, rowY, '灯笼', {
             fontSize: '16px',
             color: '#FF4444',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        const lanternDesc = this.add.text(contentX + 100, rowY, '悬挂摆动，不同高度', {
+        const lanternDesc = this.add.text(contentX + 110, rowY, '悬挂摆动，不同高度', {
             fontSize: '14px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
@@ -750,7 +735,7 @@ export class MenuScene extends Scene {
 
         // ========== 操作说明 ==========
         rowY += 45;
-        const controlTitle = this.add.text(contentX, rowY, '🎮 操作说明', {
+        const controlTitle = this.add.text(contentX, rowY, '操作说明', {
             fontSize: '20px',
             color: '#00AAFF',
             fontStyle: 'bold',
