@@ -16,6 +16,7 @@ import type { LevelType } from '../types/index.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualButtons } from '../ui/VirtualButtons.js';
 import { COLORS, LEVELS, PLAYER } from '../utils/constants.js';
+import { computeJumpApexDelta } from '../utils/physics.js';
 
 interface GameData {
     level: LevelType;
@@ -429,6 +430,7 @@ export class GameScene extends Scene {
             const heights: Array<'low' | 'mid' | 'high'> = ['low', 'mid', 'high'];
             const height = heights[Math.floor(Math.random() * heights.length)];
 
+            // Lantern computes its own Y relative to scene height/ground
             const lantern = new Lantern(this, x, 0, { height });
             this.obstacles.add(lantern);
         }
@@ -438,15 +440,26 @@ export class GameScene extends Scene {
         const x = this.scale.width + 100 + Math.random() * 200;
         const type = Math.random();
 
+        // Compute safe spawn Y based on player's jump apex and ground
+        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
+        const jumpDelta = computeJumpApexDelta(PLAYER.JUMP_VELOCITY, PLAYER.GRAVITY);
+        const apexY = this.player ? (this.player.y - jumpDelta) : Math.max(50, groundTop - 300);
+        const reserve = 32; // margin below apex to ensure collect overlap
+        const allowedMinY = Math.max(50, apexY + reserve);
+        const allowedMaxY = Math.max(allowedMinY + 10, groundTop - 40);
+
+        const desiredY = 300 + Math.random() * 200;
+        const spawnY = Phaser.Math.Clamp(desiredY, allowedMinY, allowedMaxY);
+
         let item;
         if (type < 0.5) {
             const fuTypes: Array<'fu_copper' | 'fu_silver' | 'fu_gold'> = ['fu_copper', 'fu_copper', 'fu_copper', 'fu_silver', 'fu_gold'];
             const fuType = fuTypes[Math.floor(Math.random() * fuTypes.length)];
-            item = new FuCharacter(this, x, 300 + Math.random() * 200, fuType);
+            item = new FuCharacter(this, x, spawnY, fuType);
         } else if (type < 0.8) {
-            item = new RedPacket(this, x, 300 + Math.random() * 200);
+            item = new RedPacket(this, x, spawnY);
         } else {
-            item = new SpringWord(this, x, 300 + Math.random() * 200);
+            item = new SpringWord(this, x, spawnY);
         }
 
         this.items.add(item);

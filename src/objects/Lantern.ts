@@ -1,6 +1,6 @@
 import type { Scene } from 'phaser';
-import { Obstacle } from './Obstacle.js';
 import type { LanternConfig } from '../types/index.js';
+import { Obstacle } from './Obstacle.js';
 
 export class Lantern extends Obstacle {
     private config: LanternConfig;
@@ -29,17 +29,17 @@ export class Lantern extends Obstacle {
     }
 
     private setupHeight(): void {
-        switch (this.config.height) {
-            case 'low':
-                this.y = 450;
-                break;
-            case 'mid':
-                this.y = 350;
-                break;
-            case 'high':
-                this.y = 250;
-                break;
-        }
+        // Compute heights relative to ground to adapt to different canvas sizes.
+        const groundTop = (this.scene.scale.height - 140);
+        // Offsets measured from groundTop (low -> closer to ground)
+        const offsets = {
+            low: 130,
+            mid: 230,
+            high: 330,
+        } as const;
+
+        const offset = offsets[this.config.height ?? 'mid'] ?? offsets.mid;
+        this.y = groundTop - offset;
     }
 
     private createGlow(): void {

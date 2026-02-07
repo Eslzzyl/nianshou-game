@@ -22,7 +22,12 @@ export abstract class Item extends Phaser.Physics.Arcade.Sprite {
             (this.body as Phaser.Physics.Arcade.Body).allowGravity = false;
             (this.body as Phaser.Physics.Arcade.Body).moves = false;
         }
-        this.setSize(40, 40);
+        // Ensure physics body is a consistent, centered hitbox
+        if (this.body) {
+            (this.body as Phaser.Physics.Arcade.Body).setSize(40, 40, true);
+        } else {
+            this.setSize(40, 40);
+        }
 
         this.startY = y;
         this.startTime = scene.time.now;

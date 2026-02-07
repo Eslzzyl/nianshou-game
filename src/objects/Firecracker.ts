@@ -31,7 +31,7 @@ export class Firecracker extends Obstacle {
 
     private setupPhysics(): void {
         if (this.config.type === 'ground') {
-            this.y = 600;
+            // ground type should use spawn Y provided by spawner (avoid hardcoded 600)
             this.setSize(40, 60);
         } else {
             this.setSize(40, 40);
