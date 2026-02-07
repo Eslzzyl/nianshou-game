@@ -17,6 +17,7 @@ export class GameOverScene extends Scene {
     private distance = 0;
     private level?: LevelType;
     private fromSceneKey?: string;
+    private uiContainer?: Phaser.GameObjects.Container;
 
     constructor() {
         super({ key: 'GameOverScene' });
@@ -30,15 +31,29 @@ export class GameOverScene extends Scene {
     }
 
     create(): void {
-        this.createBackground();
-        this.createGameOverText();
-        this.createStats();
-        this.createButtons();
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        this.buildLayout();
 
         SaveManager.getInstance().setHighScore(this.score);
 
         this.input.keyboard?.on('keydown-SPACE', () => this.restartGame());
         this.input.keyboard?.on('keydown-ENTER', () => this.restartGame());
+    }
+
+    private buildLayout(): void {
+        this.uiContainer?.destroy(true);
+        this.uiContainer = this.add.container(0, 0);
+
+        this.createBackground();
+        this.createGameOverText();
+        this.createStats();
+        this.createButtons();
+    }
+
+    private onResize(): void {
+        this.buildLayout();
     }
 
     private createBackground(): void {
@@ -53,6 +68,8 @@ export class GameOverScene extends Scene {
             bg.fillRect(0, y, this.scale.width, 1);
         }
 
+        this.uiContainer?.add(bg);
+
         // 暗角效果
         const vignette = this.add.graphics();
         vignette.fillStyle(0x000000, 0.6);
@@ -65,6 +82,8 @@ export class GameOverScene extends Scene {
             vignette.fillRect(0, 0, i, this.scale.height);
             vignette.fillRect(this.scale.width - i, 0, i, this.scale.height);
         }
+
+        this.uiContainer?.add(vignette);
     }
 
     private createGameOverText(): void {
@@ -102,12 +121,14 @@ export class GameOverScene extends Scene {
         });
 
         // 副标题
-        this.add.text(centerX, 220, '年兽被打败了，但勇气永存...', {
+        const subtitle = this.add.text(centerX, 220, '年兽被打败了，但勇气永存...', {
             fontSize: '20px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add([glow, text, subtitle]);
     }
 
     private createStats(): void {
@@ -115,9 +136,10 @@ export class GameOverScene extends Scene {
         const yOffset = 320;
 
         // 统计面板
-        UIComponents.createScrollPanel(this, centerX, yOffset + 50, 400, 180);
+        const panel = UIComponents.createScrollPanel(this, centerX, yOffset + 50, 400, 180);
+        this.uiContainer?.add(panel);
 
-        this.add.text(centerX, yOffset, `📊 本局分数: ${this.score}`, {
+        const scoreText = this.add.text(centerX, yOffset, `📊 本局分数: ${this.score}`, {
             fontSize: '28px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -125,7 +147,7 @@ export class GameOverScene extends Scene {
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        this.add.text(centerX, yOffset + 50, `🏃 奔跑距离: ${this.distance}m`, {
+        const distanceText = this.add.text(centerX, yOffset + 50, `🏃 奔跑距离: ${this.distance}m`, {
             fontSize: '24px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
@@ -133,18 +155,20 @@ export class GameOverScene extends Scene {
         }).setOrigin(0.5);
 
         const highScore = SaveManager.getInstance().getHighScore();
-        this.add.text(centerX, yOffset + 100, `🏆 最高分数: ${highScore}`, {
+        const highScoreText = this.add.text(centerX, yOffset + 100, `🏆 最高分数: ${highScore}`, {
             fontSize: '20px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add([scoreText, distanceText, highScoreText]);
     }
 
     private createButtons(): void {
         const buttonY = 520;
 
-        UIComponents.createModernButton(
+        const retryBtn = UIComponents.createModernButton(
             this,
             this.scale.width / 2 - 160,
             buttonY,
@@ -153,7 +177,7 @@ export class GameOverScene extends Scene {
             { width: 240 }
         );
 
-        UIComponents.createModernButton(
+        const menuBtn = UIComponents.createModernButton(
             this,
             this.scale.width / 2 + 160,
             buttonY,
@@ -161,6 +185,8 @@ export class GameOverScene extends Scene {
             () => this.returnToMenu(),
             { width: 240 }
         );
+
+        this.uiContainer?.add([retryBtn, menuBtn]);
     }
 
     private restartGame(): void {

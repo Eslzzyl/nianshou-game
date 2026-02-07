@@ -12,6 +12,8 @@ interface VictoryData {
 
 export class VictoryScene extends Scene {
     private newAchievements: Achievement[] = [];
+    private uiContainer?: Phaser.GameObjects.Container;
+    private fireworksLoop?: Phaser.Time.TimerEvent;
 
     constructor() {
         super({ key: 'VictoryScene' });
@@ -24,12 +26,10 @@ export class VictoryScene extends Scene {
     create(): void {
         ParticleManager.getInstance().init(this);
 
-        this.createBackground();
-        this.createVictoryText();
-        this.createStats();
-        this.createAchievements();
-        this.createButtons();
-        this.createDecorations();
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        this.buildLayout();
 
         this.input.keyboard?.on('keydown-SPACE', () => this.returnToMenu());
         this.input.keyboard?.on('keydown-ENTER', () => this.returnToMenu());
@@ -37,6 +37,27 @@ export class VictoryScene extends Scene {
 
     update(_time: number, delta: number): void {
         ParticleManager.getInstance().update(delta);
+    }
+
+    private buildLayout(): void {
+        this.uiContainer?.destroy(true);
+        this.uiContainer = this.add.container(0, 0);
+
+        if (this.fireworksLoop) {
+            this.fireworksLoop.remove();
+            this.fireworksLoop = undefined;
+        }
+
+        this.createBackground();
+        this.createVictoryText();
+        this.createStats();
+        this.createAchievements();
+        this.createButtons();
+        this.createDecorations();
+    }
+
+    private onResize(): void {
+        this.buildLayout();
     }
 
     private createBackground(): void {
@@ -51,11 +72,14 @@ export class VictoryScene extends Scene {
             bg.fillRect(0, y, this.scale.width, 1);
         }
 
+        this.uiContainer?.add(bg);
+
         // 背景图片
         if (this.textures.exists('bg_palace')) {
             const bgImage = this.add.image(this.scale.width / 2, this.scale.height / 2, 'bg_palace');
             bgImage.setDisplaySize(this.scale.width, this.scale.height);
             bgImage.setAlpha(0.4);
+            this.uiContainer?.add(bgImage);
         }
 
         // 庆祝烟花
@@ -71,7 +95,7 @@ export class VictoryScene extends Scene {
             });
         }
 
-        this.time.addEvent({
+        this.fireworksLoop = this.time.addEvent({
             delay: 1800,
             callback: () => {
                 const x = 150 + Math.random() * (this.scale.width - 300);
@@ -118,12 +142,14 @@ export class VictoryScene extends Scene {
         });
 
         // 副标题
-        this.add.text(centerX, 210, '福气已成功送达！', {
+        const subtitle = this.add.text(centerX, 210, '福气已成功送达！', {
             fontSize: '26px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add([glow, text, subtitle]);
     }
 
     private createStats(): void {
@@ -132,9 +158,10 @@ export class VictoryScene extends Scene {
         const score = ScoreManager.getInstance().getScore();
 
         // 分数面板
-        UIComponents.createScrollPanel(this, centerX, yOffset + 30, 350, 120);
+        const panel = UIComponents.createScrollPanel(this, centerX, yOffset + 30, 350, 120);
+        this.uiContainer?.add(panel);
 
-        this.add.text(centerX, yOffset, `🏆 最终分数: ${score}`, {
+        const scoreText = this.add.text(centerX, yOffset, `🏆 最终分数: ${score}`, {
             fontSize: '32px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -142,15 +169,19 @@ export class VictoryScene extends Scene {
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
+        this.uiContainer?.add(scoreText);
+
         const highScore = SaveManager.getInstance().getHighScore();
         if (score >= highScore) {
-            this.add.text(centerX, yOffset + 55, '⭐ 新纪录! ⭐', {
+            const recordText = this.add.text(centerX, yOffset + 55, '⭐ 新纪录! ⭐', {
                 fontSize: '24px',
                 color: '#FF6B35',
                 fontStyle: 'bold',
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
+
+            this.uiContainer?.add(recordText);
         }
     }
 
@@ -160,27 +191,31 @@ export class VictoryScene extends Scene {
         const centerX = this.scale.width / 2;
         const yOffset = 430;
 
-        this.add.text(centerX, yOffset, '✨ 新解锁成就', {
+        const title = this.add.text(centerX, yOffset, '✨ 新解锁成就', {
             fontSize: '22px',
             color: '#AAAAAA',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
+        this.uiContainer?.add(title);
+
         let achievementY = yOffset + 40;
         for (const achievement of this.newAchievements) {
-            this.add.text(centerX, achievementY, `🏅 ${achievement.name}`, {
+            const achText = this.add.text(centerX, achievementY, `🏅 ${achievement.name}`, {
                 fontSize: '18px',
                 color: '#FFD700',
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
+
+            this.uiContainer?.add(achText);
             achievementY += 32;
         }
     }
 
     private createButtons(): void {
-        UIComponents.createModernButton(
+        const menuBtn = UIComponents.createModernButton(
             this,
             this.scale.width / 2,
             580,
@@ -188,15 +223,19 @@ export class VictoryScene extends Scene {
             () => this.returnToMenu(),
             { width: 300 }
         );
+
+        this.uiContainer?.add(menuBtn);
     }
 
     private createDecorations(): void {
         // 两侧灯笼
-        this.createLantern(100, 120);
-        this.createLantern(this.scale.width - 100, 120);
+        const left = this.createLantern(100, 120);
+        const right = this.createLantern(this.scale.width - 100, 120);
+
+        this.uiContainer?.add([left, right]);
     }
 
-    private createLantern(x: number, y: number): void {
+    private createLantern(x: number, y: number): Phaser.GameObjects.Container {
         const container = this.add.container(x, y);
 
         const lantern = this.add.graphics();
@@ -218,6 +257,8 @@ export class VictoryScene extends Scene {
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
+
+        return container;
     }
 
     private returnToMenu(): void {

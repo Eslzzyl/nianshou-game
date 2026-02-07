@@ -47,6 +47,7 @@ const LEVEL_NAMES: Record<LevelType, string> = {
 
 export class StoryScene extends Scene {
     private level!: LevelType;
+    private uiContainer?: Phaser.GameObjects.Container;
 
     constructor() {
         super({ key: 'StoryScene' });
@@ -59,9 +60,10 @@ export class StoryScene extends Scene {
     create(): void {
         ParticleManager.getInstance().init(this);
 
-        this.createBackground();
-        this.createStoryPanel();
-        this.createContinueHint();
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        this.buildLayout();
 
         this.input.keyboard?.on('keydown-SPACE', () => this.startGame());
         this.input.keyboard?.on('keydown-ENTER', () => this.startGame());
@@ -70,6 +72,19 @@ export class StoryScene extends Scene {
 
     update(_time: number, delta: number): void {
         ParticleManager.getInstance().update(delta);
+    }
+
+    private buildLayout(): void {
+        this.uiContainer?.destroy(true);
+        this.uiContainer = this.add.container(0, 0);
+
+        this.createBackground();
+        this.createStoryPanel();
+        this.createContinueHint();
+    }
+
+    private onResize(): void {
+        this.buildLayout();
     }
 
     private createBackground(): void {
@@ -86,11 +101,14 @@ export class StoryScene extends Scene {
             bg.fillRect(0, y, this.scale.width, 1);
         }
 
+        this.uiContainer?.add(bg);
+
         // 背景图片
         if (this.textures.exists(bgKeys[this.level - 1])) {
             const bgImage = this.add.image(this.scale.width / 2, this.scale.height / 2, bgKeys[this.level - 1]);
             bgImage.setDisplaySize(this.scale.width, this.scale.height);
             bgImage.setAlpha(0.35);
+            this.uiContainer?.add(bgImage);
         }
 
         // 装饰灯笼
@@ -99,13 +117,15 @@ export class StoryScene extends Scene {
 
     private createDecorations(): void {
         // 两侧灯笼
-        this.createLantern(80, 100);
-        this.createLantern(this.scale.width - 80, 100);
-        this.createLantern(80, 250);
-        this.createLantern(this.scale.width - 80, 250);
+        const leftTop = this.createLantern(80, 100);
+        const rightTop = this.createLantern(this.scale.width - 80, 100);
+        const leftBottom = this.createLantern(80, 250);
+        const rightBottom = this.createLantern(this.scale.width - 80, 250);
+
+        this.uiContainer?.add([leftTop, rightTop, leftBottom, rightBottom]);
     }
 
-    private createLantern(x: number, y: number): void {
+    private createLantern(x: number, y: number): Phaser.GameObjects.Container {
         const container = this.add.container(x, y);
 
         const lantern = this.add.graphics();
@@ -127,6 +147,8 @@ export class StoryScene extends Scene {
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
+
+        return container;
     }
 
     private createStoryPanel(): void {
@@ -134,7 +156,8 @@ export class StoryScene extends Scene {
         const panelY = this.scale.height / 2;
 
         // 卷轴面板
-        UIComponents.createScrollPanel(this, centerX, panelY, 700, 450);
+        const panel = UIComponents.createScrollPanel(this, centerX, panelY, 700, 450);
+        this.uiContainer?.add(panel);
 
         // 关卡标题
         const titleContainer = this.add.container(centerX, 130);
@@ -165,6 +188,7 @@ export class StoryScene extends Scene {
         glow.setAlpha(0.25);
 
         titleContainer.add([glow, icon, title]);
+        this.uiContainer?.add(titleContainer);
 
         // 脉冲动画
         this.tweens.add({
@@ -194,6 +218,8 @@ export class StoryScene extends Scene {
                 resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
 
+            this.uiContainer?.add(txt);
+
             txt.setAlpha(0);
 
             this.tweens.add({
@@ -214,6 +240,8 @@ export class StoryScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add(hint);
 
         this.tweens.add({
             targets: hint,

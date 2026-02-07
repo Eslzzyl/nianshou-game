@@ -3,15 +3,31 @@ import { UIComponents } from '../ui/UIComponents.js';
 import { UI_RESOLUTION } from '../utils/constants.js';
 
 export class PauseScene extends Scene {
+    private uiContainer?: Phaser.GameObjects.Container;
+
     constructor() {
         super({ key: 'PauseScene' });
     }
 
     create(): void {
-        this.createOverlay();
-        this.createMenu();
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        this.buildLayout();
 
         this.input.keyboard?.on('keydown-ESC', () => this.resumeGame());
+    }
+
+    private buildLayout(): void {
+        this.uiContainer?.destroy(true);
+        this.uiContainer = this.add.container(0, 0);
+
+        this.createOverlay();
+        this.createMenu();
+    }
+
+    private onResize(): void {
+        this.buildLayout();
     }
 
     private createOverlay(): void {
@@ -26,6 +42,7 @@ export class PauseScene extends Scene {
         );
 
         overlay.setInteractive();
+        this.uiContainer?.add(overlay);
     }
 
     private createMenu(): void {
@@ -33,10 +50,11 @@ export class PauseScene extends Scene {
         const centerY = this.scale.height / 2;
 
         // 使用卷轴面板
-        UIComponents.createScrollPanel(this, centerX, centerY, 420, 400);
+        const panel = UIComponents.createScrollPanel(this, centerX, centerY, 420, 400);
+        this.uiContainer?.add(panel);
 
         // 标题
-        this.add.text(centerX, centerY - 160, '⏸️ 游戏暂停', {
+        const title = this.add.text(centerX, centerY - 160, '⏸️ 游戏暂停', {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -45,7 +63,7 @@ export class PauseScene extends Scene {
         }).setOrigin(0.5);
 
         // 按钮
-        UIComponents.createModernButton(
+        const resumeBtn = UIComponents.createModernButton(
             this,
             centerX,
             centerY - 60,
@@ -53,7 +71,7 @@ export class PauseScene extends Scene {
             () => this.resumeGame()
         );
 
-        UIComponents.createModernButton(
+        const restartBtn = UIComponents.createModernButton(
             this,
             centerX,
             centerY + 40,
@@ -61,7 +79,7 @@ export class PauseScene extends Scene {
             () => this.restartGame()
         );
 
-        UIComponents.createModernButton(
+        const menuBtn = UIComponents.createModernButton(
             this,
             centerX,
             centerY + 140,
@@ -70,12 +88,14 @@ export class PauseScene extends Scene {
         );
 
         // 提示文字
-        this.add.text(centerX, centerY + 200, '按 ESC 继续游戏', {
+        const hint = this.add.text(centerX, centerY + 200, '按 ESC 继续游戏', {
             fontSize: '14px',
             color: '#666666',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add([title, resumeBtn, restartBtn, menuBtn, hint]);
     }
 
     private resumeGame(): void {

@@ -7,6 +7,15 @@ import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 import { isMobile } from '../utils/helpers.js';
 
 export class MenuScene extends Scene {
+    private uiContainer?: Phaser.GameObjects.Container;
+    private modalContainer?: Phaser.GameObjects.Container;
+    private activeModal: 'level' | 'achievements' | 'settings' | null = null;
+
+    private fpsText?: Phaser.GameObjects.Text;
+    private versionText?: Phaser.GameObjects.Text;
+    private highScoreText?: Phaser.GameObjects.Text;
+    private mobileNotice?: Phaser.GameObjects.Text;
+
     constructor() {
         super({ key: 'MenuScene' });
     }
@@ -16,6 +25,16 @@ export class MenuScene extends Scene {
         AudioManager.getInstance().playMusic();
 
         ParticleManager.getInstance().init(this);
+
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
+
+        this.buildLayout();
+    }
+
+    private buildLayout(): void {
+        this.uiContainer?.destroy(true);
+        this.uiContainer = this.add.container(0, 0);
 
         this.createBackground();
         this.createTitle();
@@ -27,9 +46,13 @@ export class MenuScene extends Scene {
         if (isMobile()) {
             this.createMobileNotice();
         }
+
+        this.rebuildModal();
     }
 
-    private fpsText?: Phaser.GameObjects.Text;
+    private onResize(): void {
+        this.buildLayout();
+    }
 
     private createFPS(): void {
         this.fpsText = this.add.text(this.scale.width - 10, this.scale.height - 10, '', {
@@ -38,6 +61,8 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(1, 1);
+
+        this.uiContainer?.add(this.fpsText);
     }
 
     update(_time: number, delta: number): void {
@@ -63,11 +88,14 @@ export class MenuScene extends Scene {
             bg.fillRect(0, y, width, 1);
         }
 
+        this.uiContainer?.add(bg);
+
         // 添加背景图片（如果存在）
         if (this.textures.exists('bg_village')) {
             const bgImage = this.add.image(width / 2, height / 2, 'bg_village');
             bgImage.setDisplaySize(width, height);
             bgImage.setAlpha(0.3);
+            this.uiContainer?.add(bgImage);
         }
     }
 
@@ -97,12 +125,14 @@ export class MenuScene extends Scene {
         title.setStroke('#8B0000', 6);
 
         // 副标题
-        this.add.text(centerX, 220, '🧧 帮助年兽躲避爆竹，收集福气！ 🧧', {
+        const subtitle = this.add.text(centerX, 220, '🧧 帮助年兽躲避爆竹，收集福气！ 🧧', {
             fontSize: '22px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+
+        this.uiContainer?.add([glow, title, subtitle]);
     }
 
     private createButtons(): void {
@@ -111,51 +141,56 @@ export class MenuScene extends Scene {
         const spacing = 85;
 
         // 开始游戏
-        UIComponents.createModernButton(this, centerX, startY, '🎮 开始游戏', () => {
+        const startBtn = UIComponents.createModernButton(this, centerX, startY, '🎮 开始游戏', () => {
             AudioManager.getInstance().play('collect_fu');
             this.scene.start('StoryScene', { level: 1 });
         });
 
         // 选择关卡
-        UIComponents.createModernButton(this, centerX, startY + spacing, '📜 选择关卡', () => {
+        const levelBtn = UIComponents.createModernButton(this, centerX, startY + spacing, '📜 选择关卡', () => {
             AudioManager.getInstance().play('collect_fu');
             this.showLevelSelect();
         });
 
         // 成就
-        UIComponents.createModernButton(this, centerX, startY + spacing * 2, '🏆 成就', () => {
+        const achievementsBtn = UIComponents.createModernButton(this, centerX, startY + spacing * 2, '🏆 成就', () => {
             AudioManager.getInstance().play('collect_fu');
             this.showAchievements();
         });
 
         // 设置
-        UIComponents.createModernButton(this, centerX, startY + spacing * 3, '⚙️ 设置', () => {
+        const settingsBtn = UIComponents.createModernButton(this, centerX, startY + spacing * 3, '⚙️ 设置', () => {
             AudioManager.getInstance().play('collect_fu');
             this.showSettings();
         });
+
+        this.uiContainer?.add([startBtn, levelBtn, achievementsBtn, settingsBtn]);
     }
 
     private createDecorations(): void {
         // 左侧灯笼
-        this.createLantern(80, 100);
-        this.createLantern(80, 250);
+        const leftTop = this.createLantern(80, 100);
+        const leftBottom = this.createLantern(80, 250);
 
         // 右侧灯笼
-        this.createLantern(this.scale.width - 80, 100);
-        this.createLantern(this.scale.width - 80, 250);
+        const rightTop = this.createLantern(this.scale.width - 80, 100);
+        const rightBottom = this.createLantern(this.scale.width - 80, 250);
 
         // 底部装饰
         const bottomDecor = this.add.graphics();
         bottomDecor.fillStyle(COLORS.GOLD_PRIMARY, 0.3);
         bottomDecor.fillRect(0, this.scale.height - 60, this.scale.width, 60);
 
+        this.uiContainer?.add([leftTop, leftBottom, rightTop, rightBottom, bottomDecor]);
+
         // 祥云图案（简化版）
         for (let x = 0; x < this.scale.width; x += 200) {
-            this.createCloud(x + 100, this.scale.height - 40);
+            const cloud = this.createCloud(x + 100, this.scale.height - 40);
+            this.uiContainer?.add(cloud);
         }
     }
 
-    private createLantern(x: number, y: number): void {
+    private createLantern(x: number, y: number): Phaser.GameObjects.Container {
         const container = this.add.container(x, y);
 
         // 灯笼主体
@@ -186,20 +221,24 @@ export class MenuScene extends Scene {
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
+
+        return container;
     }
 
-    private createCloud(x: number, y: number): void {
+    private createCloud(x: number, y: number): Phaser.GameObjects.Graphics {
         const cloud = this.add.graphics();
         cloud.fillStyle(COLORS.GOLD_PRIMARY, 0.4);
         cloud.fillCircle(x, y, 25);
         cloud.fillCircle(x - 20, y + 5, 20);
         cloud.fillCircle(x + 20, y + 5, 20);
+
+        return cloud;
     }
 
     private createVersion(): void {
         const y = this.scale.height - 25;
 
-        this.add.text(20, y, 'v1.0.0', {
+        this.versionText = this.add.text(20, y, 'v1.0.0', {
             fontSize: '14px',
             color: '#888888',
             fontFamily: STYLE.FONT.FAMILY,
@@ -207,16 +246,18 @@ export class MenuScene extends Scene {
         });
 
         const highScore = SaveManager.getInstance().getHighScore();
-        this.add.text(this.scale.width - 20, y, `🏆 最高分: ${highScore}`, {
+        this.highScoreText = this.add.text(this.scale.width - 20, y, `🏆 最高分: ${highScore}`, {
             fontSize: '14px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(1, 0);
+
+        this.uiContainer?.add([this.versionText, this.highScoreText]);
     }
 
     private createMobileNotice(): void {
-        const notice = this.add.text(this.scale.width / 2, this.scale.height - 90, '📱 检测到移动设备，请横屏游玩', {
+        this.mobileNotice = this.add.text(this.scale.width / 2, this.scale.height - 90, '📱 检测到移动设备，请横屏游玩', {
             fontSize: '16px',
             color: '#FFD700',
             fontFamily: STYLE.FONT.FAMILY,
@@ -224,18 +265,62 @@ export class MenuScene extends Scene {
         }).setOrigin(0.5);
 
         this.tweens.add({
-            targets: notice,
+            targets: this.mobileNotice,
             alpha: 0.6,
             duration: 1000,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
+
+        this.uiContainer?.add(this.mobileNotice);
     }
 
     private showLevelSelect(): void {
-        const menuContainer = this.add.container(0, 0);
+        this.openModal('level');
+    }
 
+    private showAchievements(): void {
+        this.openModal('achievements');
+    }
+
+    private showSettings(): void {
+        this.openModal('settings');
+    }
+
+    private openModal(type: 'level' | 'achievements' | 'settings'): void {
+        this.modalContainer?.destroy(true);
+        this.activeModal = type;
+
+        switch (type) {
+            case 'level':
+                this.modalContainer = this.buildLevelSelectModal();
+                break;
+            case 'achievements':
+                this.modalContainer = this.buildAchievementsModal();
+                break;
+            case 'settings':
+                this.modalContainer = this.buildSettingsModal();
+                break;
+        }
+    }
+
+    private closeModal(): void {
+        this.modalContainer?.destroy(true);
+        this.modalContainer = undefined;
+        this.activeModal = null;
+    }
+
+    private rebuildModal(): void {
+        if (!this.activeModal) return;
+        const type = this.activeModal;
+        this.modalContainer?.destroy(true);
+        this.activeModal = null;
+        this.openModal(type);
+    }
+
+    private buildLevelSelectModal(): Phaser.GameObjects.Container {
+        const menuContainer = this.add.container(0, 0);
         const overlay = this.add.rectangle(
             this.scale.width / 2,
             this.scale.height / 2,
@@ -277,7 +362,7 @@ export class MenuScene extends Scene {
                 this.scale.height / 2 + lvl.y,
                 unlocked ? lvl.name : '🔒 锁定',
                 () => {
-                    menuContainer.destroy();
+                    this.closeModal();
                     this.scene.start('StoryScene', { level: lvl.level });
                 },
                 { width: 380, height: 55, disabled: !unlocked }
@@ -296,17 +381,19 @@ export class MenuScene extends Scene {
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
         closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
         closeBtn.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         overlay.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         menuContainer.add(closeBtn);
+
+        return menuContainer;
     }
 
-    private showAchievements(): void {
+    private buildAchievementsModal(): Phaser.GameObjects.Container {
         const menuContainer = this.add.container(0, 0);
 
         const overlay = this.add.rectangle(
@@ -381,17 +468,19 @@ export class MenuScene extends Scene {
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
         closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
         closeBtn.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         overlay.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         menuContainer.add(closeBtn);
+
+        return menuContainer;
     }
 
-    private showSettings(): void {
+    private buildSettingsModal(): Phaser.GameObjects.Container {
         const menuContainer = this.add.container(0, 0);
 
         const overlay = this.add.rectangle(
@@ -456,13 +545,15 @@ export class MenuScene extends Scene {
         closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
         closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
         closeBtn.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         overlay.on('pointerdown', () => {
-            menuContainer.destroy();
+            this.closeModal();
         });
 
         menuContainer.add(closeBtn);
+
+        return menuContainer;
     }
 }

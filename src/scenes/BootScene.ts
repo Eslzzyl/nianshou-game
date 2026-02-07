@@ -3,12 +3,18 @@ import { AudioManager } from '../managers/AudioManager.js';
 import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 export class BootScene extends Scene {
+    private loadingContainer?: Phaser.GameObjects.Container;
+    private lastProgress = 0;
+
     constructor() {
         super({ key: 'BootScene' });
     }
 
     preload(): void {
         this.load.setPath('assets');
+
+        this.scale.off('resize', this.onResize, this);
+        this.scale.on('resize', this.onResize, this);
 
         this.createLoadingUI();
 
@@ -56,30 +62,38 @@ export class BootScene extends Scene {
     private loadingText?: Phaser.GameObjects.Text;
     private logoText?: Phaser.GameObjects.Text;
     private glowEffect?: Phaser.GameObjects.Graphics;
+    private background?: Phaser.GameObjects.Graphics;
 
     private createLoadingUI(): void {
+        this.loadingContainer?.destroy(true);
+        this.loadingContainer = this.add.container(0, 0);
+
         const { width, height } = this.scale;
         const centerX = width / 2;
         const centerY = height / 2;
 
         // 渐变背景
-        const bg = this.add.graphics();
+        this.background = this.add.graphics();
         for (let y = 0; y < height; y++) {
             const ratio = y / height;
             const r = Math.floor(26 + ratio * 30);
             const gVal = Math.floor(10 + ratio * 15);
             const b = Math.floor(10 + ratio * 10);
-            bg.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b), 1);
-            bg.fillRect(0, y, width, 1);
+            this.background.fillStyle(Phaser.Display.Color.GetColor(r, gVal, b), 1);
+            this.background.fillRect(0, y, width, 1);
         }
 
+        this.loadingContainer.add(this.background);
+
         // 装饰性祥云
-        this.createDecorations();
+        const decorations = this.createDecorations();
+        this.loadingContainer.add(decorations);
 
         // 发光效果
         this.glowEffect = this.add.graphics();
         this.glowEffect.fillStyle(COLORS.GOLD_PRIMARY, 0.15);
         this.glowEffect.fillCircle(centerX, centerY - 50, 150);
+        this.loadingContainer.add(this.glowEffect);
 
         // Logo文字
         this.logoText = this.add.text(centerX, centerY - 80, '🧧 年兽送福', {
@@ -90,6 +104,7 @@ export class BootScene extends Scene {
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
         this.logoText.setStroke('#8B0000', 6);
+        this.loadingContainer.add(this.logoText);
 
         // 加载条背景
         this.loadingBg = this.add.graphics();
@@ -97,9 +112,11 @@ export class BootScene extends Scene {
         this.drawRoundedRect(this.loadingBg, centerX - 220, centerY + 20, 440, 50, 8);
         this.loadingBg.lineStyle(2, COLORS.GOLD_PRIMARY);
         this.drawRoundedRectStroke(this.loadingBg, centerX - 220, centerY + 20, 440, 50, 8);
+        this.loadingContainer.add(this.loadingBg);
 
         // 加载条
         this.loadingBar = this.add.graphics();
+        this.loadingContainer.add(this.loadingBar);
 
         // 加载文字
         this.loadingText = this.add.text(centerX, centerY + 90, '正在加载资源... 0%', {
@@ -108,6 +125,7 @@ export class BootScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
+        this.loadingContainer.add(this.loadingText);
 
         // Logo呼吸动画
         this.tweens.add({
@@ -131,8 +149,9 @@ export class BootScene extends Scene {
         });
     }
 
-    private createDecorations(): void {
+    private createDecorations(): Phaser.GameObjects.Graphics[] {
         const { width, height } = this.scale;
+        const elements: Phaser.GameObjects.Graphics[] = [];
 
         // 底部祥云
         const cloudGraphics = this.add.graphics();
@@ -145,18 +164,22 @@ export class BootScene extends Scene {
             cloudGraphics.fillCircle(x + 25, y + 10, 25);
         }
 
+        elements.push(cloudGraphics);
+
         // 角落装饰
         // 左上
-        this.createCornerDecoration(20, 20, 0);
+        elements.push(this.createCornerDecoration(20, 20, 0));
         // 右上
-        this.createCornerDecoration(width - 20, 20, 90);
+        elements.push(this.createCornerDecoration(width - 20, 20, 90));
         // 左下
-        this.createCornerDecoration(20, height - 20, 270);
+        elements.push(this.createCornerDecoration(20, height - 20, 270));
         // 右下
-        this.createCornerDecoration(width - 20, height - 20, 180);
+        elements.push(this.createCornerDecoration(width - 20, height - 20, 180));
+
+        return elements;
     }
 
-    private createCornerDecoration(x: number, y: number, rotation: number): void {
+    private createCornerDecoration(x: number, y: number, rotation: number): Phaser.GameObjects.Graphics {
         const decor = this.add.graphics();
         decor.fillStyle(COLORS.GOLD_PRIMARY, 0.4);
 
@@ -167,9 +190,12 @@ export class BootScene extends Scene {
 
         decor.setPosition(x, y);
         decor.setRotation((rotation * Math.PI) / 180);
+
+        return decor;
     }
 
     private updateLoadingBar(value: number): void {
+        this.lastProgress = value;
         const { width, height } = this.scale;
         const centerX = width / 2;
         const centerY = height / 2;
@@ -199,6 +225,11 @@ export class BootScene extends Scene {
         if (this.loadingText) {
             this.loadingText.text = `正在加载资源... ${Math.floor(value * 100)}%`;
         }
+    }
+
+    private onResize(): void {
+        this.createLoadingUI();
+        this.updateLoadingBar(this.lastProgress);
     }
 
     private drawRoundedRect(
