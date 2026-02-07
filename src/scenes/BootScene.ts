@@ -248,56 +248,7 @@ export class BootScene extends Scene {
     private loadAssets(): void {
         AudioManager.getInstance().init(this);
         AudioManager.getInstance().preload();
-
-        const basePath = 'images/';
-
-        // 背景
-        this.load.image('bg_sky', `${basePath}backgrounds/sky.png`);
-        this.load.image('bg_mountains', `${basePath}backgrounds/mountains.png`);
-        this.load.image('bg_buildings', `${basePath}backgrounds/buildings.png`);
-        this.load.image('bg_ground', `${basePath}backgrounds/ground.png`);
-        this.load.image('bg_village', `${basePath}backgrounds/village.png`);
-        this.load.image('bg_city', `${basePath}backgrounds/city.png`);
-        this.load.image('bg_palace', `${basePath}backgrounds/palace.png`);
-
-        // 角色动画
-        this.load.spritesheet('nianshou_run', `${basePath}characters/nianshou_run.png`, {
-            frameWidth: 128,
-            frameHeight: 128,
-        });
-        this.load.image('nianshou_jump', `${basePath}characters/nianshou_jump.png`);
-        this.load.spritesheet('nianshou_duck', `${basePath}characters/nianshou_duck.png`, {
-            frameWidth: 128,
-            frameHeight: 128,
-        });
-        this.load.spritesheet('nianshou_hurt', `${basePath}characters/nianshou_hurt.png`, {
-            frameWidth: 128,
-            frameHeight: 128,
-        });
-
-        // 障碍物
-        this.load.spritesheet('firecracker', `${basePath}obstacles/firecracker.png`, {
-            frameWidth: 64,
-            frameHeight: 64,
-        });
-        this.load.image('lantern', `${basePath}obstacles/lantern.png`);
-
-        // 收集物
-        this.load.image('fu_copper', `${basePath}items/fu_copper.png`);
-        this.load.image('fu_silver', `${basePath}items/fu_silver.png`);
-        this.load.image('fu_gold', `${basePath}items/fu_gold.png`);
-        this.load.spritesheet('redpacket', `${basePath}items/redpacket.png`, {
-            frameWidth: 48,
-            frameHeight: 48,
-        });
-        this.load.spritesheet('spring_word', `${basePath}items/spring_word.png`, {
-            frameWidth: 48,
-            frameHeight: 48,
-        });
-
-        // UI
-        this.load.image('ui_button', `${basePath}ui/button.png`);
-        this.load.image('health_icon', `${basePath}ui/heart.png`);
+        // 所有纹理都在 generatePlaceholderTextures() 中通过代码生成
     }
 
     create(): void {
