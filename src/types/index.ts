@@ -38,6 +38,7 @@ export interface LevelConfig {
     maxSpeed: number;
     bgKey: string;
     bgLayers: string[];
+    bgLayerBaseHeights: number[];
     bossPhase?: boolean;
 }
 

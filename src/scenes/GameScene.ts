@@ -11,7 +11,7 @@ import { Player } from '../objects/Player.js';
 import type { LevelType } from '../types/index.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualButtons } from '../ui/VirtualButtons.js';
-import { COLORS, LEVELS, PLAYER } from '../utils/constants.js';
+import { COLORS, GROUND_HEIGHT, LEVELS, PLAYER } from '../utils/constants.js';
 import { computeJumpApexDelta } from '../utils/physics.js';
 
 interface GameData {
@@ -39,7 +39,6 @@ export class GameScene extends Scene {
 
     private ground?: Phaser.Physics.Arcade.StaticGroup;
     private groundSprite?: Phaser.GameObjects.Rectangle;
-    private static readonly GROUND_HEIGHT = 140;
 
     constructor(config?: Phaser.Types.Scenes.SettingsConfig) {
         super(config || { key: 'GameScene' });
@@ -99,7 +98,7 @@ export class GameScene extends Scene {
         // 清理事件监听
         this.scale.off('resize', this.onResize, this);
         this.events.off(Phaser.Scenes.Events.RESUME);
-        
+
         // 清理键盘事件
         if (this.input.keyboard) {
             this.input.keyboard.off('keydown-ESC');
@@ -137,20 +136,58 @@ export class GameScene extends Scene {
 
     private createBackgrounds(): void {
         const bgKeys = this.levelConfig.bgLayers;
-        const groundY = this.scale.height - GameScene.GROUND_HEIGHT;
-        const yPositions = [0, 100, 200, groundY];
+        const layout = this.getBackgroundLayout(this.scale.width, this.scale.height);
 
         for (let i = 0; i < bgKeys.length; i++) {
+            const layerLayout = layout[i];
             const bg = this.add.tileSprite(
                 this.scale.width / 2,
-                yPositions[i],
+                layerLayout?.y ?? 0,
                 this.scale.width,
-                i === 3 ? 140 : this.scale.height,
+                layerLayout?.height ?? this.scale.height,
                 bgKeys[i]
             );
             bg.setOrigin(0.5, 0);
+            // ensure visual size matches target (TileSprite rendering needs setDisplaySize when resizing)
+            bg.setDisplaySize(this.scale.width, layerLayout?.height ?? this.scale.height);
             this.backgrounds.push(bg);
         }
+    }
+
+    private getBackgroundLayout(width: number, height: number): Array<{ y: number; height: number }> {
+        const safeWidth = Math.max(1, Math.floor(width));
+        const safeHeight = Math.max(1, Math.floor(height));
+        const groundHeight = Math.min(GROUND_HEIGHT, safeHeight);
+        const groundY = Math.max(0, safeHeight - groundHeight);
+        const baseHeights = this.levelConfig.bgLayerBaseHeights;
+        const scale = Math.max(0.4, safeHeight / 720);
+        const layout: Array<{ y: number; height: number }> = [];
+
+        for (let i = 0; i < this.levelConfig.bgLayers.length; i++) {
+            if (i === 0) {
+                layout.push({ y: 0, height: Math.max(1, groundY) });
+                continue;
+            }
+
+            if (i === this.levelConfig.bgLayers.length - 1) {
+                layout.push({ y: groundY, height: groundHeight });
+                continue;
+            }
+
+            const baseHeight = baseHeights[i] ?? Math.round(safeHeight * 0.25);
+            const layerHeight = Math.min(Math.round(baseHeight * scale), groundY);
+            const y = Math.max(0, groundY - layerHeight);
+            layout.push({ y, height: Math.max(1, layerHeight) });
+        }
+
+        if (layout.length > 0 && safeWidth > 0) {
+            // Ensure layout exists for all layers even in edge cases.
+            while (layout.length < this.levelConfig.bgLayers.length) {
+                layout.push({ y: 0, height: Math.max(1, groundY) });
+            }
+        }
+
+        return layout;
     }
 
     private createDecorations(): void {
@@ -186,7 +223,7 @@ export class GameScene extends Scene {
     }
 
     private createPlayer(): void {
-        const playerY = this.scale.height - GameScene.GROUND_HEIGHT - PLAYER.HEIGHT / 2;
+        const playerY = this.scale.height - GROUND_HEIGHT - PLAYER.HEIGHT / 2;
         this.player = new Player(this, PLAYER.X, playerY);
     }
 
@@ -197,8 +234,8 @@ export class GameScene extends Scene {
 
     private createCollisions(): void {
         this.ground = this.physics.add.staticGroup();
-        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
-        const groundHeight = GameScene.GROUND_HEIGHT;
+        const groundTop = this.scale.height - GROUND_HEIGHT;
+        const groundHeight = GROUND_HEIGHT;
         const groundY = groundTop + groundHeight / 2;
         this.groundSprite = this.add.rectangle(
             this.scale.width / 2,
@@ -453,7 +490,7 @@ export class GameScene extends Scene {
     private spawnObstacle(): void {
         const x = this.scale.width + 100;
         const type = Math.random();
-        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
+        const groundTop = this.scale.height - GROUND_HEIGHT;
 
         if (type < 0.6) {
             const firecrackerType = Math.random() < 0.7 ? 'ground' : 'air';
@@ -478,7 +515,7 @@ export class GameScene extends Scene {
         const type = Math.random();
 
         // Compute safe spawn Y based on player's jump apex and ground
-        const groundTop = this.scale.height - GameScene.GROUND_HEIGHT;
+        const groundTop = this.scale.height - GROUND_HEIGHT;
         const jumpDelta = computeJumpApexDelta(PLAYER.JUMP_VELOCITY, PLAYER.GRAVITY);
         const apexY = this.player ? (this.player.y - jumpDelta) : Math.max(50, groundTop - 300);
         const reserve = 32; // margin below apex to ensure collect overlap
@@ -601,17 +638,17 @@ export class GameScene extends Scene {
         this.physics.world.setBounds(0, 0, width, height);
 
         // 更新背景
-        const groundY = height - GameScene.GROUND_HEIGHT;
-        const yPositions = [0, 100, 200, groundY];
+        const layout = this.getBackgroundLayout(width, height);
         for (let i = 0; i < this.backgrounds.length; i++) {
             const bg = this.backgrounds[i];
-            bg.setPosition(width / 2, yPositions[i] ?? 0);
-            bg.setSize(width, i === 3 ? GameScene.GROUND_HEIGHT : height);
+            const layerLayout = layout[i];
+            bg.setPosition(width / 2, layerLayout?.y ?? 0);
+            bg.setDisplaySize(width, layerLayout?.height ?? height);
         }
 
         // 更新地面碰撞体
         if (this.groundSprite?.body) {
-            const groundHeight = GameScene.GROUND_HEIGHT;
+            const groundHeight = GROUND_HEIGHT;
             const groundYCenter = (height - groundHeight) + groundHeight / 2;
             this.groundSprite.setPosition(width / 2, groundYCenter);
             this.groundSprite.setSize(width, groundHeight);
@@ -628,7 +665,7 @@ export class GameScene extends Scene {
             const maxX = width - 32;
             this.player.x = Phaser.Math.Clamp(this.player.x, minX, maxX);
             if (this.player.getPlayerState() !== 'FLYING') {
-                const playerY = height - GameScene.GROUND_HEIGHT - PLAYER.HEIGHT / 2;
+                const playerY = height - GROUND_HEIGHT - PLAYER.HEIGHT / 2;
                 this.player.y = Math.min(this.player.y, playerY);
             }
         }

@@ -3,6 +3,9 @@ import type { Achievement, LevelConfig, ParallaxLayer } from '../types/index.js'
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
+// 地面层高度（像素），用于贴图拉伸和地面碰撞体
+export const GROUND_HEIGHT = 140;
+
 // HiDPI text resolution (DPI). Used to keep Canvas-rendered fonts crisp on Retina / 3K displays.
 // Keep capped for performance; increase the cap if you explicitly prefer maximum sharpness.
 export const UI_RESOLUTION = Math.min(window.devicePixelRatio || 1, 2);
@@ -134,6 +137,7 @@ export const LEVELS: LevelConfig[] = [
         maxSpeed: 250,
         bgKey: 'bg_village',
         bgLayers: ['bg1_sky', 'bg1_hills', 'bg1_houses', 'bg1_ground'],
+        bgLayerBaseHeights: [720, 220, 320, GROUND_HEIGHT],
     },
     {
         level: 2,
@@ -142,6 +146,7 @@ export const LEVELS: LevelConfig[] = [
         maxSpeed: 320,
         bgKey: 'bg_city',
         bgLayers: ['bg2_sky', 'bg2_cityline', 'bg2_buildings', 'bg2_road'],
+        bgLayerBaseHeights: [720, 220, 320, GROUND_HEIGHT],
     },
     {
         level: 3,
@@ -150,6 +155,7 @@ export const LEVELS: LevelConfig[] = [
         maxSpeed: 400,
         bgKey: 'bg_palace',
         bgLayers: ['bg3_sky', 'bg3_wall', 'bg3_palace', 'bg3_ground'],
+        bgLayerBaseHeights: [720, 240, 320, GROUND_HEIGHT],
         bossPhase: true,
     },
 ];

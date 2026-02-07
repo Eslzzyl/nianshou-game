@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { AudioManager } from '../managers/AudioManager.js';
-import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
+import { COLORS, GROUND_HEIGHT, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 
 export class BootScene extends Scene {
     private loadingContainer?: Phaser.GameObjects.Container;
@@ -607,12 +607,12 @@ export class BootScene extends Scene {
         });
 
         this.generateTexture('bg1_ground', 1280, 720, (g, w) => {
-            // 地面层 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            // 地面层 - tileSprite 在底部，使用 GROUND_HEIGHT 高度
             g.fillStyle(0x8B5a2a);
-            g.fillRect(0, 0, w, 140);
+            g.fillRect(0, 0, w, GROUND_HEIGHT);
             g.fillStyle(0x6B4520);
             for (let x = 0; x < w; x += 30) {
-                g.fillRect(x, 0, 2, 140);
+                g.fillRect(x, 0, 2, GROUND_HEIGHT);
             }
             g.fillStyle(0xA0522D);
             for (let x = 10; x < w; x += 80) {
@@ -682,9 +682,9 @@ export class BootScene extends Scene {
         });
 
         this.generateTexture('bg2_road', 1280, 720, (g, w) => {
-            // 道路 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            // 道路 - tileSprite 在底部，使用 GROUND_HEIGHT 高度
             g.fillStyle(0x3a3a4a);
-            g.fillRect(0, 0, w, 140);
+            g.fillRect(0, 0, w, GROUND_HEIGHT);
             g.fillStyle(0x5a5a6a);
             for (let x = 0; x < w; x += 50) {
                 g.fillRect(x, 65, 30, 8);
@@ -763,13 +763,13 @@ export class BootScene extends Scene {
         });
 
         this.generateTexture('bg3_ground', 1280, 720, (g, w) => {
-            // 御道层 - tileSprite在y=580，高度140，填满纹理顶部0-140
+            // 御道层 - tileSprite 在底部，使用 GROUND_HEIGHT 高度
             g.fillStyle(0x696969);
-            g.fillRect(0, 0, w, 140);
+            g.fillRect(0, 0, w, GROUND_HEIGHT);
             g.lineStyle(2, 0x505050);
             for (let x = 0; x < w; x += 60) {
                 g.moveTo(x, 0);
-                g.lineTo(x + 30, 140);
+                g.lineTo(x + 30, GROUND_HEIGHT);
             }
             g.strokePath();
             g.fillStyle(0xDAA520);

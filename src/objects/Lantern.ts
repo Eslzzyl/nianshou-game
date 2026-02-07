@@ -1,5 +1,6 @@
 import type { Scene } from 'phaser';
 import type { LanternConfig } from '../types/index.js';
+import { GROUND_HEIGHT } from '../utils/constants.js';
 import { Obstacle } from './Obstacle.js';
 
 export class Lantern extends Obstacle {
@@ -35,7 +36,7 @@ export class Lantern extends Obstacle {
     }
 
     private setupHeight(): void {
-        const groundTop = (this.scene.scale.height - 140);
+        const groundTop = (this.scene.scale.height - GROUND_HEIGHT);
         const offsets = {
             low: 130,
             mid: 230,
@@ -59,7 +60,7 @@ export class Lantern extends Obstacle {
             this.glowSprite = this.scene.add.sprite(this.x, this.y, 'lantern_glow');
             this.glowSprite.setBlendMode(Phaser.BlendModes.ADD);
         }
-        
+
         this.glowSprite.setVisible(true);
         this.glowSprite.setPosition(this.x, this.y);
     }

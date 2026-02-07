@@ -47,6 +47,8 @@ export abstract class Obstacle extends Phaser.Physics.Arcade.Sprite {
         this.y = y;
         this.isActive = true;
         this.createdTime = this.scene?.time.now ?? 0;
-        this.body.enable = true;
+        if (this.body) {
+            this.body.enable = true;
+        }
     }
 }
