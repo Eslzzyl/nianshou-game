@@ -47,6 +47,9 @@ export class ScoreManager {
         this.distance = 0;
         this.invincibleEnergy = 0;
         this.isInvincibleActive = false;
+        this.lives = 3;
+        this.score = 0;
+        this.redPackets = 0;
     }
 
     addScore(points: number): void {

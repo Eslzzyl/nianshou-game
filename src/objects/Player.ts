@@ -333,7 +333,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(): boolean {
-        if (this.currentState === 'INVINCIBLE' || this.currentState === 'FLYING') {
+        if (this.currentState === 'INVINCIBLE' || this.currentState === 'FLYING' || this.currentState === 'HURT') {
             return false;
         }
 
@@ -356,7 +356,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         });
 
-        return true;
+        return false;
     }
 
     activateInvincible(): void {
