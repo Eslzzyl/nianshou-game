@@ -36,6 +36,8 @@ export class Lantern extends Obstacle {
     }
 
     private setupHeight(): void {
+        if (!this.scene) return;
+
         const groundTop = (this.scene.scale.height - GROUND_HEIGHT);
         const offsets = {
             low: 130,
