@@ -602,11 +602,11 @@ export class MenuScene extends Scene {
         );
         overlay.setInteractive();
 
-        // 使用现代面板 - 面板中心在屏幕中心
-        const panel = UIComponents.createModernPanel(this, this.scale.width / 2, this.scale.height / 2, 640, 520);
+        // 使用卷轴面板
+        const panel = UIComponents.createScrollPanel(this, this.scale.width / 2, this.scale.height / 2, 640, 560);
 
-        // 标题 - 相对于面板中心
-        const title = this.add.text(0, -240, '📖 游戏指南', {
+        // 标题
+        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 240, '📖 游戏指南', {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -614,11 +614,11 @@ export class MenuScene extends Scene {
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        panel.add(title);
+        // 内容区域起始位置
+        const contentX = this.scale.width / 2 - 300;
+        const contentY = this.scale.height / 2 - 200;
 
-        // 内容区域起始位置（相对于面板中心，左上角为 -320, -260）
-        const contentX = -300;
-        const contentY = -200;
+        const contentElements: Phaser.GameObjects.GameObject[] = [];
 
         // ========== 物品图鉴 ==========
         const itemsTitle = this.add.text(contentX, contentY, '🎁 可收集物品', {
@@ -628,7 +628,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add(itemsTitle);
+        contentElements.push(itemsTitle);
 
         // 福字物品
         const fuItems = [
@@ -655,7 +655,7 @@ export class MenuScene extends Scene {
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            panel.add([icon, name, desc]);
+            contentElements.push(icon, name, desc);
             rowY += 28;
         });
 
@@ -677,7 +677,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add([packetIcon, packetName, packetDesc]);
+        contentElements.push(packetIcon, packetName, packetDesc);
 
         // 春字
         rowY += 28;
@@ -697,7 +697,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add([springIcon, springName, springDesc]);
+        contentElements.push(springIcon, springName, springDesc);
 
         // ========== 障碍物图鉴 ==========
         rowY += 45;
@@ -708,7 +708,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add(obstacleTitle);
+        contentElements.push(obstacleTitle);
 
         rowY += 35;
         const firecrackerIcon = this.add.text(contentX + 10, rowY, '🧨', {
@@ -727,7 +727,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add([firecrackerIcon, firecrackerName, firecrackerDesc]);
+        contentElements.push(firecrackerIcon, firecrackerName, firecrackerDesc);
 
         rowY += 28;
         const lanternIcon = this.add.text(contentX + 10, rowY, '🏮', {
@@ -746,7 +746,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add([lanternIcon, lanternName, lanternDesc]);
+        contentElements.push(lanternIcon, lanternName, lanternDesc);
 
         // ========== 操作说明 ==========
         rowY += 45;
@@ -757,7 +757,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        panel.add(controlTitle);
+        contentElements.push(controlTitle);
 
         const controls = [
             { key: '空格 / W / ↑', action: '跳跃（空中可二段跳）' },
@@ -780,12 +780,12 @@ export class MenuScene extends Scene {
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            panel.add([keyText, actionText]);
+            contentElements.push(keyText, actionText);
             rowY += 26;
         });
 
-        // 关闭按钮 - 相对于面板中心
-        const closeBtn = this.add.text(300, -250, '✕', {
+        // 关闭按钮
+        const closeBtn = this.add.text(this.scale.width / 2 + 300, this.scale.height / 2 - 250, '✕', {
             fontSize: '32px',
             color: '#FFFFFF',
             fontFamily: STYLE.FONT.FAMILY,
@@ -798,13 +798,11 @@ export class MenuScene extends Scene {
             this.closeModal();
         });
 
-        panel.add(closeBtn);
-
         overlay.on('pointerdown', () => {
             this.closeModal();
         });
 
-        menuContainer.add([overlay, panel]);
+        menuContainer.add([overlay, panel, title, closeBtn, ...contentElements]);
 
         return menuContainer;
     }
