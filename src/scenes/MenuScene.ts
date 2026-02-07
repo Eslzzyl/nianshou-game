@@ -9,7 +9,7 @@ import { isMobile } from '../utils/helpers.js';
 export class MenuScene extends Scene {
     private uiContainer?: Phaser.GameObjects.Container;
     private modalContainer?: Phaser.GameObjects.Container;
-    private activeModal: 'level' | 'achievements' | 'settings' | null = null;
+    private activeModal: 'level' | 'achievements' | 'settings' | 'guide' | null = null;
 
     private fpsText?: Phaser.GameObjects.Text;
     private versionText?: Phaser.GameObjects.Text;
@@ -137,8 +137,8 @@ export class MenuScene extends Scene {
 
     private createButtons(): void {
         const centerX = this.scale.width / 2;
-        const startY = 320;
-        const spacing = 85;
+        const startY = 290;
+        const spacing = 72;
 
         // 开始游戏
         const startBtn = UIComponents.createModernButton(this, centerX, startY, '🎮 开始游戏', () => {
@@ -164,7 +164,13 @@ export class MenuScene extends Scene {
             this.showSettings();
         });
 
-        this.uiContainer?.add([startBtn, levelBtn, achievementsBtn, settingsBtn]);
+        // 游戏指南
+        const guideBtn = UIComponents.createModernButton(this, centerX, startY + spacing * 4, '📖 游戏指南', () => {
+            AudioManager.getInstance().play('collect_fu');
+            this.showGuide();
+        });
+
+        this.uiContainer?.add([startBtn, levelBtn, achievementsBtn, settingsBtn, guideBtn]);
     }
 
     private createDecorations(): void {
@@ -307,7 +313,11 @@ export class MenuScene extends Scene {
         this.openModal('settings');
     }
 
-    private openModal(type: 'level' | 'achievements' | 'settings'): void {
+    private showGuide(): void {
+        this.openModal('guide');
+    }
+
+    private openModal(type: 'level' | 'achievements' | 'settings' | 'guide'): void {
         this.modalContainer?.destroy(true);
         this.activeModal = type;
 
@@ -320,6 +330,9 @@ export class MenuScene extends Scene {
                 break;
             case 'settings':
                 this.modalContainer = this.buildSettingsModal();
+                break;
+            case 'guide':
+                this.modalContainer = this.buildGuideModal();
                 break;
         }
     }
@@ -572,6 +585,226 @@ export class MenuScene extends Scene {
         });
 
         menuContainer.add(closeBtn);
+
+        return menuContainer;
+    }
+
+    private buildGuideModal(): Phaser.GameObjects.Container {
+        const menuContainer = this.add.container(0, 0);
+
+        const overlay = this.add.rectangle(
+            this.scale.width / 2,
+            this.scale.height / 2,
+            this.scale.width,
+            this.scale.height,
+            0x000000,
+            0.85
+        );
+        overlay.setInteractive();
+
+        // 使用现代面板 - 面板中心在屏幕中心
+        const panel = UIComponents.createModernPanel(this, this.scale.width / 2, this.scale.height / 2, 640, 520);
+
+        // 标题 - 相对于面板中心
+        const title = this.add.text(0, -240, '📖 游戏指南', {
+            fontSize: '36px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        panel.add(title);
+
+        // 内容区域起始位置（相对于面板中心，左上角为 -320, -260）
+        const contentX = -300;
+        const contentY = -200;
+
+        // ========== 物品图鉴 ==========
+        const itemsTitle = this.add.text(contentX, contentY, '🎁 可收集物品', {
+            fontSize: '20px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add(itemsTitle);
+
+        // 福字物品
+        const fuItems = [
+            { icon: '🟫', name: '铜福', desc: '+10分', color: '#CD7F32' },
+            { icon: '⬜', name: '银福', desc: '+25分', color: '#C0C0C0' },
+            { icon: '🟨', name: '金福', desc: '+50分', color: '#FFD700' },
+        ];
+
+        let rowY = contentY + 35;
+        fuItems.forEach((item) => {
+            const icon = this.add.text(contentX + 10, rowY, item.icon, {
+                fontSize: '18px',
+                resolution: UI_RESOLUTION,
+            });
+            const name = this.add.text(contentX + 40, rowY, item.name, {
+                fontSize: '16px',
+                color: item.color,
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+            const desc = this.add.text(contentX + 100, rowY, item.desc, {
+                fontSize: '14px',
+                color: '#AAAAAA',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+            panel.add([icon, name, desc]);
+            rowY += 28;
+        });
+
+        // 红包
+        rowY += 5;
+        const packetIcon = this.add.text(contentX + 10, rowY, '🧧', {
+            fontSize: '18px',
+            resolution: UI_RESOLUTION,
+        });
+        const packetName = this.add.text(contentX + 40, rowY, '红包', {
+            fontSize: '16px',
+            color: '#FF4444',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        const packetDesc = this.add.text(contentX + 100, rowY, '收集5个可激活无敌护盾（3秒）', {
+            fontSize: '14px',
+            color: '#AAAAAA',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add([packetIcon, packetName, packetDesc]);
+
+        // 春字
+        rowY += 28;
+        const springIcon = this.add.text(contentX + 10, rowY, '🌸', {
+            fontSize: '18px',
+            resolution: UI_RESOLUTION,
+        });
+        const springName = this.add.text(contentX + 40, rowY, '春字', {
+            fontSize: '16px',
+            color: '#00FF00',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        const springDesc = this.add.text(contentX + 100, rowY, '激活飞行模式5秒，可自由移动', {
+            fontSize: '14px',
+            color: '#AAAAAA',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add([springIcon, springName, springDesc]);
+
+        // ========== 障碍物图鉴 ==========
+        rowY += 45;
+        const obstacleTitle = this.add.text(contentX, rowY, '⚠️ 障碍物（接触会受伤）', {
+            fontSize: '20px',
+            color: '#FF4444',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add(obstacleTitle);
+
+        rowY += 35;
+        const firecrackerIcon = this.add.text(contentX + 10, rowY, '🧨', {
+            fontSize: '18px',
+            resolution: UI_RESOLUTION,
+        });
+        const firecrackerName = this.add.text(contentX + 40, rowY, '爆竹', {
+            fontSize: '16px',
+            color: '#FF4444',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        const firecrackerDesc = this.add.text(contentX + 100, rowY, '地面/空中，静止或弹跳', {
+            fontSize: '14px',
+            color: '#AAAAAA',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add([firecrackerIcon, firecrackerName, firecrackerDesc]);
+
+        rowY += 28;
+        const lanternIcon = this.add.text(contentX + 10, rowY, '🏮', {
+            fontSize: '18px',
+            resolution: UI_RESOLUTION,
+        });
+        const lanternName = this.add.text(contentX + 40, rowY, '灯笼', {
+            fontSize: '16px',
+            color: '#FF4444',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        const lanternDesc = this.add.text(contentX + 100, rowY, '悬挂摆动，不同高度', {
+            fontSize: '14px',
+            color: '#AAAAAA',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add([lanternIcon, lanternName, lanternDesc]);
+
+        // ========== 操作说明 ==========
+        rowY += 45;
+        const controlTitle = this.add.text(contentX, rowY, '🎮 操作说明', {
+            fontSize: '20px',
+            color: '#00AAFF',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        panel.add(controlTitle);
+
+        const controls = [
+            { key: '空格 / W / ↑', action: '跳跃（空中可二段跳）' },
+            { key: 'S / ↓', action: '下蹲（降低高度）' },
+            { key: 'A / ←  D / →', action: '左右移动' },
+            { key: 'E / 点击按钮', action: '激活护盾（需5个红包）' },
+        ];
+
+        rowY += 35;
+        controls.forEach((ctrl) => {
+            const keyText = this.add.text(contentX + 10, rowY, ctrl.key, {
+                fontSize: '14px',
+                color: '#FFD700',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+            const actionText = this.add.text(contentX + 180, rowY, ctrl.action, {
+                fontSize: '14px',
+                color: '#AAAAAA',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+            panel.add([keyText, actionText]);
+            rowY += 26;
+        });
+
+        // 关闭按钮 - 相对于面板中心
+        const closeBtn = this.add.text(300, -250, '✕', {
+            fontSize: '32px',
+            color: '#FFFFFF',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
+        closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
+        closeBtn.on('pointerdown', () => {
+            this.closeModal();
+        });
+
+        panel.add(closeBtn);
+
+        overlay.on('pointerdown', () => {
+            this.closeModal();
+        });
+
+        menuContainer.add([overlay, panel]);
 
         return menuContainer;
     }

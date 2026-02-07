@@ -105,13 +105,17 @@ export class UIComponents {
     ): Phaser.GameObjects.Container {
         const container = scene.add.container(x, y);
 
+        // 面板以容器中心为原点，计算左上角偏移
+        const leftX = -width / 2;
+        const topY = -height / 2;
+
         // 阴影
         const shadow = scene.add.graphics();
         shadow.fillStyle(0x000000, STYLE.PANEL.SHADOW_ALPHA);
         this.drawRoundedRect(
             shadow,
-            STYLE.PANEL.SHADOW_BLUR,
-            STYLE.PANEL.SHADOW_BLUR,
+            leftX + STYLE.PANEL.SHADOW_BLUR,
+            topY + STYLE.PANEL.SHADOW_BLUR,
             width,
             height,
             STYLE.PANEL.CORNER_RADIUS
@@ -120,12 +124,12 @@ export class UIComponents {
 
         // 背景
         const bg = scene.add.graphics();
-        this.drawRoundedRect(bg, 0, 0, width, height, STYLE.PANEL.CORNER_RADIUS, COLORS.UI_PANEL);
+        this.drawRoundedRect(bg, leftX, topY, width, height, STYLE.PANEL.CORNER_RADIUS, COLORS.UI_PANEL);
 
         // 边框
         const border = scene.add.graphics();
         border.lineStyle(STYLE.PANEL.BORDER_WIDTH, COLORS.UI_PANEL_BORDER);
-        this.drawRoundedRectStroke(border, 0, 0, width, height, STYLE.PANEL.CORNER_RADIUS);
+        this.drawRoundedRectStroke(border, leftX, topY, width, height, STYLE.PANEL.CORNER_RADIUS);
 
         container.add([shadow, bg, border]);
 
