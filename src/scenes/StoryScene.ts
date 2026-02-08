@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { LEVEL_STORIES } from '../data/NarrativeData.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import type { LevelType } from '../types/index.js';
 import { UIComponents } from '../ui/UIComponents.js';
@@ -7,43 +8,6 @@ import { COLORS, STYLE, UI_RESOLUTION } from '../utils/constants.js';
 interface StoryData {
     level: LevelType;
 }
-
-const STORY_TEXTS: Record<LevelType, string[]> = {
-    1: [
-        '春节将至，年兽决定给人类送福。',
-        '但人们不知道年兽已经改邪归正，',
-        '仍然用爆竹驱赶它...',
-        '',
-        '帮助年兽躲避爆竹，收集福气吧！',
-    ],
-    2: [
-        '年兽成功通过了乡村，',
-        '来到了繁华的城市。',
-        '这里的爆竹更加密集，',
-        '灯笼也挂得更高...',
-        '',
-        '小心那些摇摆的灯笼！',
-    ],
-    3: [
-        '最后一关！年兽来到了皇宫附近。',
-        '这里正在进行盛大的烟花表演，',
-        '爆竹如雨点般落下...',
-        '',
-        '坚持到最后，福气就会送达！',
-    ],
-};
-
-const LEVEL_ICONS: Record<LevelType, string> = {
-    1: '🏘️',
-    2: '🌃',
-    3: '🏯',
-};
-
-const LEVEL_NAMES: Record<LevelType, string> = {
-    1: '乡村街道',
-    2: '城市夜景',
-    3: '皇宫大殿',
-};
 
 export class StoryScene extends Scene {
     private level!: LevelType;
@@ -153,22 +117,32 @@ export class StoryScene extends Scene {
 
     private createStoryPanel(): void {
         const centerX = this.scale.width / 2;
-        const panelY = this.scale.height / 2;
+        const storyData = LEVEL_STORIES[this.level];
 
-        // 卷轴面板
-        const panel = UIComponents.createScrollPanel(this, centerX, panelY, 700, 450);
+        // 卷轴面板 - 调整位置和大小，给标题留空间
+        const panelY = this.scale.height / 2 + 60;
+        const panelHeight = 400;
+        const panel = UIComponents.createScrollPanel(this, centerX, panelY, 720, panelHeight);
         this.uiContainer?.add(panel);
 
-        // 关卡标题
+        // 关卡标题 - 在面板上方
         const titleContainer = this.add.container(centerX, 130);
 
-        const icon = this.add.text(0, 0, LEVEL_ICONS[this.level], {
-            fontSize: '56px',
+        const icon = this.add.text(0, 0, storyData.icon, {
+            fontSize: '48px',
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        const title = this.add.text(0, 50, `第 ${this.level} 关：${LEVEL_NAMES[this.level]}`, {
-            fontSize: '40px',
+        // 关卡名称
+        const levelNum = this.add.text(0, 40, `第 ${this.level} 关`, {
+            fontSize: '24px',
+            color: '#FFD700',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        const title = this.add.text(0, 70, storyData.title, {
+            fontSize: '32px',
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -177,8 +151,8 @@ export class StoryScene extends Scene {
         title.setStroke('#8B0000', 4);
 
         // 发光效果
-        const glow = this.add.text(0, 50, `第 ${this.level} 关：${LEVEL_NAMES[this.level]}`, {
-            fontSize: '40px',
+        const glow = this.add.text(0, 70, storyData.title, {
+            fontSize: '32px',
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -187,7 +161,7 @@ export class StoryScene extends Scene {
         glow.setStroke('#FFD700', 8);
         glow.setAlpha(0.25);
 
-        titleContainer.add([glow, icon, title]);
+        titleContainer.add([glow, icon, levelNum, title]);
         this.uiContainer?.add(titleContainer);
 
         // 脉冲动画
@@ -200,18 +174,39 @@ export class StoryScene extends Scene {
             ease: 'Sine.easeInOut',
         });
 
-        // 故事文字
-        const texts = STORY_TEXTS[this.level];
-        let yOffset = panelY - 80;
+        // 主题描述 - 在面板上方
+        const themeText = this.add.text(centerX, 230, `—— ${storyData.theme} ——`, {
+            fontSize: '16px',
+            color: '#FFD700',
+            fontStyle: 'italic',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+        themeText.setAlpha(0.7);
+        this.uiContainer?.add(themeText);
+
+        // 故事文字 - 在卷轴面板内部显示
+        // 面板Y中心是 panelY，高度是 panelHeight
+        // 面板顶部 = panelY - panelHeight/2，底部 = panelY + panelHeight/2
+        const panelTop = panelY - panelHeight / 2;
+        const texts = storyData.introLines;
+        let yOffset = panelTop + 40; // 从面板内部顶部开始
+        const lineHeight = 32;
+        const panelBottom = panelY + panelHeight / 2 - 30; // 预留底部空间
 
         for (const text of texts) {
             if (text === '') {
-                yOffset += 25;
+                yOffset += 18;
                 continue;
             }
 
+            // 如果超出面板底部，跳过剩余文字
+            if (yOffset > panelBottom) {
+                break;
+            }
+
             const txt = this.add.text(centerX, yOffset, text, {
-                fontSize: '24px',
+                fontSize: '20px',
                 color: '#FFFFFF',
                 align: 'center',
                 fontFamily: STYLE.FONT.FAMILY,
@@ -226,11 +221,53 @@ export class StoryScene extends Scene {
                 targets: txt,
                 alpha: 1,
                 duration: 600,
-                delay: (yOffset - (panelY - 80)) * 3,
+                delay: (yOffset - panelTop) * 2,
             });
 
-            yOffset += 45;
+            yOffset += lineHeight;
         }
+
+        // 文化小知识提示 - 固定在卷轴面板下方
+        this.createCulturalNotes(centerX, panelY + panelHeight / 2 + 50, storyData.culturalNotes);
+    }
+
+    private createCulturalNotes(x: number, y: number, notes: { item: string; meaning: string }[]): void {
+        const container = this.add.container(x, y);
+
+        // 标题
+        const title = this.add.text(0, 0, '📚 文化小知识', {
+            fontSize: '16px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        container.add(title);
+
+        // 显示第一条文化注释
+        if (notes.length > 0) {
+            const note = notes[0];
+            const noteText = this.add.text(0, 28, `${note.item}：${note.meaning}`, {
+                fontSize: '14px',
+                color: '#AAAAAA',
+                align: 'center',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            }).setOrigin(0.5);
+
+            container.add(noteText);
+        }
+
+        container.setAlpha(0);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            duration: 800,
+            delay: 1500,
+        });
+
+        this.uiContainer?.add(container);
     }
 
     private createContinueHint(): void {

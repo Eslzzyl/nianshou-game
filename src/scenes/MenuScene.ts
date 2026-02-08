@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { CULTURE_CODEX } from '../data/NarrativeData.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
@@ -589,6 +590,8 @@ export class MenuScene extends Scene {
         return menuContainer;
     }
 
+    private guideTab: 'items' | 'culture' | 'controls' = 'items';
+
     private buildGuideModal(): Phaser.GameObjects.Container {
         const menuContainer = this.add.container(0, 0);
 
@@ -603,10 +606,10 @@ export class MenuScene extends Scene {
         overlay.setInteractive();
 
         // 使用卷轴面板
-        const panel = UIComponents.createScrollPanel(this, this.scale.width / 2, this.scale.height / 2, 640, 560);
+        const panel = UIComponents.createScrollPanel(this, this.scale.width / 2, this.scale.height / 2, 680, 580);
 
         // 标题
-        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 240, '游戏指南', {
+        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 250, '📖 游戏指南', {
             fontSize: '36px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -614,13 +617,75 @@ export class MenuScene extends Scene {
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        // 内容区域起始位置
-        const contentX = this.scale.width / 2 - 300;
-        const contentY = this.scale.height / 2 - 200;
+        // 标签页按钮
+        const tabY = this.scale.height / 2 - 200;
+        const tabs = [
+            { id: 'items', label: '🎮 物品' },
+            { id: 'culture', label: '📚 文化' },
+            { id: 'controls', label: '🎮 操作' },
+        ];
 
-        const contentElements: Phaser.GameObjects.GameObject[] = [];
+        const tabButtons: Phaser.GameObjects.Text[] = [];
+        tabs.forEach((tab, index) => {
+            const x = this.scale.width / 2 - 200 + index * 200;
+            const btn = this.add.text(x, tabY, tab.label, {
+                fontSize: '18px',
+                color: this.guideTab === tab.id ? '#FFD700' : '#888888',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        // ========== 物品图鉴 ==========
+            btn.on('pointerdown', () => {
+                this.guideTab = tab.id as 'items' | 'culture' | 'controls';
+                this.rebuildModal();
+            });
+
+            tabButtons.push(btn);
+        });
+
+        // 根据当前标签页显示内容
+        let contentElements: Phaser.GameObjects.GameObject[] = [];
+        switch (this.guideTab) {
+            case 'items':
+                contentElements = this.buildItemsGuideContent();
+                break;
+            case 'culture':
+                contentElements = this.buildCultureGuideContent();
+                break;
+            case 'controls':
+                contentElements = this.buildControlsGuideContent();
+                break;
+        }
+
+        // 关闭按钮
+        const closeBtn = this.add.text(this.scale.width / 2 + 320, this.scale.height / 2 - 260, '✕', {
+            fontSize: '32px',
+            color: '#FFFFFF',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
+        closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
+        closeBtn.on('pointerdown', () => {
+            this.closeModal();
+        });
+
+        overlay.on('pointerdown', () => {
+            this.closeModal();
+        });
+
+        menuContainer.add([overlay, panel, title, closeBtn, ...tabButtons, ...contentElements]);
+
+        return menuContainer;
+    }
+
+    private buildItemsGuideContent(): Phaser.GameObjects.GameObject[] {
+        const contentX = this.scale.width / 2 - 320;
+        const contentY = this.scale.height / 2 - 160;
+        const elements: Phaser.GameObjects.GameObject[] = [];
+
+        // ========== 可收集物品 ==========
         const itemsTitle = this.add.text(contentX, contentY, '可收集物品', {
             fontSize: '20px',
             color: '#FFD700',
@@ -628,7 +693,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(itemsTitle);
+        elements.push(itemsTitle);
 
         // 福字物品
         const fuItems = [
@@ -652,7 +717,7 @@ export class MenuScene extends Scene {
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            contentElements.push(icon, name, desc);
+            elements.push(icon, name, desc);
             rowY += 28;
         });
 
@@ -671,7 +736,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(packetIcon, packetName, packetDesc);
+        elements.push(packetIcon, packetName, packetDesc);
 
         // 春字
         rowY += 28;
@@ -688,7 +753,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(springIcon, springName, springDesc);
+        elements.push(springIcon, springName, springDesc);
 
         // ========== 障碍物图鉴 ==========
         rowY += 45;
@@ -699,7 +764,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(obstacleTitle);
+        elements.push(obstacleTitle);
 
         rowY += 35;
         const firecrackerIcon = this.add.image(contentX + 24, rowY + 8, 'firecracker').setScale(0.4);
@@ -715,7 +780,7 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(firecrackerIcon, firecrackerName, firecrackerDesc);
+        elements.push(firecrackerIcon, firecrackerName, firecrackerDesc);
 
         rowY += 28;
         const lanternIcon = this.add.image(contentX + 24, rowY + 10, 'lantern').setScale(0.25);
@@ -731,18 +796,98 @@ export class MenuScene extends Scene {
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(lanternIcon, lanternName, lanternDesc);
+        elements.push(lanternIcon, lanternName, lanternDesc);
 
-        // ========== 操作说明 ==========
-        rowY += 45;
-        const controlTitle = this.add.text(contentX, rowY, '操作说明', {
-            fontSize: '20px',
+        return elements;
+    }
+
+    private buildCultureGuideContent(): Phaser.GameObjects.GameObject[] {
+        const contentX = this.scale.width / 2 - 320;
+        const contentY = this.scale.height / 2 - 160;
+        const elements: Phaser.GameObjects.GameObject[] = [];
+
+        // 文化图鉴标题
+        const title = this.add.text(contentX, contentY, '🏮 春节文化图鉴', {
+            fontSize: '22px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        elements.push(title);
+
+        let rowY = contentY + 40;
+
+        CULTURE_CODEX.forEach((item, index) => {
+            // 分隔线（除第一项）
+            if (index > 0) {
+                const line = this.add.graphics();
+                line.lineStyle(1, 0x444444, 0.5);
+                line.moveTo(contentX, rowY - 10);
+                line.lineTo(contentX + 600, rowY - 10);
+                elements.push(line);
+            }
+
+            // 图标和名称
+            const iconText = this.add.text(contentX, rowY, `${item.icon} ${item.name}`, {
+                fontSize: '18px',
+                color: '#FFD700',
+                fontStyle: 'bold',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+
+            const descText = this.add.text(contentX + 150, rowY, item.description, {
+                fontSize: '14px',
+                color: '#CCCCCC',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+
+            rowY += 28;
+
+            // 文化背景
+            const bgLines = this.wrapText(item.culturalBackground, 55);
+            bgLines.forEach((line) => {
+                const bgText = this.add.text(contentX + 20, rowY, line, {
+                    fontSize: '13px',
+                    color: '#AAAAAA',
+                    fontFamily: STYLE.FONT.FAMILY,
+                    resolution: UI_RESOLUTION,
+                });
+                elements.push(bgText);
+                rowY += 20;
+            });
+
+            // 游戏中的作用
+            const effectText = this.add.text(contentX + 20, rowY, `🎮 ${item.inGameEffect}`, {
+                fontSize: '12px',
+                color: '#00AAFF',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+
+            elements.push(iconText, descText, effectText);
+            rowY += 35;
+        });
+
+        return elements;
+    }
+
+    private buildControlsGuideContent(): Phaser.GameObjects.GameObject[] {
+        const contentX = this.scale.width / 2 - 320;
+        const contentY = this.scale.height / 2 - 160;
+        const elements: Phaser.GameObjects.GameObject[] = [];
+
+        // 操作说明标题
+        const title = this.add.text(contentX, contentY, '🎮 操作说明', {
+            fontSize: '22px',
             color: '#00AAFF',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         });
-        contentElements.push(controlTitle);
+        elements.push(title);
 
         const controls = [
             { key: '空格 / W / ↑', action: '跳跃（空中可二段跳）' },
@@ -751,44 +896,74 @@ export class MenuScene extends Scene {
             { key: 'E / 点击按钮', action: '激活护盾（需5个红包）' },
         ];
 
-        rowY += 35;
+        let rowY = contentY + 45;
         controls.forEach((ctrl) => {
             const keyText = this.add.text(contentX + 10, rowY, ctrl.key, {
-                fontSize: '14px',
+                fontSize: '16px',
                 color: '#FFD700',
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            const actionText = this.add.text(contentX + 180, rowY, ctrl.action, {
+            const actionText = this.add.text(contentX + 200, rowY, ctrl.action, {
                 fontSize: '14px',
                 color: '#AAAAAA',
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             });
-            contentElements.push(keyText, actionText);
+            elements.push(keyText, actionText);
+            rowY += 35;
+        });
+
+        // 提示区域
+        rowY += 30;
+        const tipsTitle = this.add.text(contentX, rowY, '💡 小贴士', {
+            fontSize: '18px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        });
+        elements.push(tipsTitle);
+
+        const tips = [
+            '年兽拥有二段跳能力，善用可以到达更高处',
+            '在空中也能左右移动，灵活调整落点',
+            '护盾可以撞毁障碍物，还能获得额外分数',
+            '飞行模式下会自动收集路径上的所有福字',
+        ];
+
+        rowY += 35;
+        tips.forEach((tip) => {
+            const tipText = this.add.text(contentX + 20, rowY, `• ${tip}`, {
+                fontSize: '13px',
+                color: '#CCCCCC',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            });
+            elements.push(tipText);
             rowY += 26;
         });
 
-        // 关闭按钮
-        const closeBtn = this.add.text(this.scale.width / 2 + 300, this.scale.height / 2 - 250, '✕', {
-            fontSize: '32px',
-            color: '#FFFFFF',
-            fontFamily: STYLE.FONT.FAMILY,
-            resolution: UI_RESOLUTION,
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        return elements;
+    }
 
-        closeBtn.on('pointerover', () => closeBtn.setColor('#FFD700'));
-        closeBtn.on('pointerout', () => closeBtn.setColor('#FFFFFF'));
-        closeBtn.on('pointerdown', () => {
-            this.closeModal();
-        });
+    private wrapText(text: string, maxLength: number): string[] {
+        const lines: string[] = [];
+        let currentLine = '';
 
-        overlay.on('pointerdown', () => {
-            this.closeModal();
-        });
+        for (const char of text) {
+            if (currentLine.length >= maxLength) {
+                lines.push(currentLine);
+                currentLine = char;
+            } else {
+                currentLine += char;
+            }
+        }
 
-        menuContainer.add([overlay, panel, title, closeBtn, ...contentElements]);
+        if (currentLine) {
+            lines.push(currentLine);
+        }
 
-        return menuContainer;
+        return lines;
     }
 }

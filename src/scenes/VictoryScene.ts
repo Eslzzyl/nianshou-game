@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { ACHIEVEMENT_STORIES, VICTORY_STORY } from '../data/NarrativeData.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
@@ -111,8 +112,8 @@ export class VictoryScene extends Scene {
         const centerX = this.scale.width / 2;
 
         // 发光层
-        const glow = this.add.text(centerX, 130, '🎉 通关成功! 🎉', {
-            fontSize: '64px',
+        const glow = this.add.text(centerX, 90, VICTORY_STORY.title, {
+            fontSize: '56px',
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -122,8 +123,8 @@ export class VictoryScene extends Scene {
         glow.setAlpha(0.3);
 
         // 主文字
-        const text = this.add.text(centerX, 130, '🎉 通关成功! 🎉', {
-            fontSize: '64px',
+        const text = this.add.text(centerX, 90, VICTORY_STORY.title, {
+            fontSize: '56px',
             color: '#FFD700',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -134,22 +135,88 @@ export class VictoryScene extends Scene {
         // 脉冲动画
         this.tweens.add({
             targets: [glow, text],
-            scale: 1.08,
+            scale: 1.05,
             duration: 800,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
 
-        // 副标题
-        const subtitle = this.add.text(centerX, 210, '福气已成功送达！', {
-            fontSize: '26px',
-            color: '#FFFFFF',
+        // 故事内容面板
+        this.createStoryPanel(centerX, 200);
+
+        // 祝福语
+        const blessing = this.add.text(centerX, this.scale.height - 120, VICTORY_STORY.blessing, {
+            fontSize: '22px',
+            color: '#FFD700',
+            fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        this.uiContainer?.add([glow, text, subtitle]);
+        this.tweens.add({
+            targets: blessing,
+            alpha: 0.6,
+            duration: 1200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+        });
+
+        this.uiContainer?.add([glow, text, blessing]);
+    }
+
+    private createStoryPanel(centerX: number, startY: number): void {
+        const panel = UIComponents.createScrollPanel(this, centerX, startY + 70, 700, 180);
+        this.uiContainer?.add(panel);
+
+        // 故事文本
+        let yOffset = startY;
+        VICTORY_STORY.story.forEach((line, index) => {
+            if (line === '') {
+                yOffset += 15;
+                return;
+            }
+
+            const text = this.add.text(centerX, yOffset, line, {
+                fontSize: '18px',
+                color: '#FFFFFF',
+                align: 'center',
+                fontFamily: STYLE.FONT.FAMILY,
+                resolution: UI_RESOLUTION,
+            }).setOrigin(0.5);
+
+            text.setAlpha(0);
+            this.uiContainer?.add(text);
+
+            this.tweens.add({
+                targets: text,
+                alpha: 1,
+                duration: 600,
+                delay: 500 + index * 300,
+            });
+
+            yOffset += 26;
+        });
+
+        // 诗句
+        const quote = this.add.text(centerX, yOffset + 15, `「${VICTORY_STORY.quote}」`, {
+            fontSize: '16px',
+            color: '#AAAAAA',
+            fontStyle: 'italic',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        quote.setAlpha(0);
+        this.uiContainer?.add(quote);
+
+        this.tweens.add({
+            targets: quote,
+            alpha: 0.8,
+            duration: 800,
+            delay: 2500,
+        });
     }
 
     private createStats(): void {
@@ -189,7 +256,7 @@ export class VictoryScene extends Scene {
         if (this.newAchievements.length === 0) return;
 
         const centerX = this.scale.width / 2;
-        const yOffset = 430;
+        const yOffset = 400;
 
         const title = this.add.text(centerX, yOffset, '✨ 新解锁成就', {
             fontSize: '22px',
@@ -202,15 +269,51 @@ export class VictoryScene extends Scene {
 
         let achievementY = yOffset + 40;
         for (const achievement of this.newAchievements) {
-            const achText = this.add.text(centerX, achievementY, `🏅 ${achievement.name}`, {
+            const story = ACHIEVEMENT_STORIES[achievement.id];
+            
+            // 成就名称
+            const achName = this.add.text(centerX, achievementY, `🏅 ${achievement.name}`, {
                 fontSize: '18px',
                 color: '#FFD700',
                 fontFamily: STYLE.FONT.FAMILY,
                 resolution: UI_RESOLUTION,
             }).setOrigin(0.5);
 
-            this.uiContainer?.add(achText);
-            achievementY += 32;
+            this.uiContainer?.add(achName);
+            achievementY += 28;
+
+            // 成就故事
+            if (story) {
+                const storyLines = story.story.split('\n');
+                storyLines.forEach((line) => {
+                    if (line) {
+                        const storyText = this.add.text(centerX, achievementY, line, {
+                            fontSize: '13px',
+                            color: '#CCCCCC',
+                            align: 'center',
+                            fontFamily: STYLE.FONT.FAMILY,
+                            resolution: UI_RESOLUTION,
+                        }).setOrigin(0.5);
+
+                        this.uiContainer?.add(storyText);
+                        achievementY += 20;
+                    }
+                });
+
+                // 风味文本
+                const flavorText = this.add.text(centerX, achievementY, `💭 ${story.flavorText}`, {
+                    fontSize: '12px',
+                    color: '#888888',
+                    fontStyle: 'italic',
+                    fontFamily: STYLE.FONT.FAMILY,
+                    resolution: UI_RESOLUTION,
+                }).setOrigin(0.5);
+
+                this.uiContainer?.add(flavorText);
+                achievementY += 28;
+            }
+
+            achievementY += 15;
         }
     }
 

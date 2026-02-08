@@ -288,7 +288,13 @@ export class BootScene extends Scene {
         AudioManager.getInstance().init(this);
         AudioManager.getInstance().create();
 
-        this.scene.start('MenuScene');
+        // 检查是否是首次运行，决定是否显示开场故事
+        const hasSeenStory = localStorage.getItem('nianshou_story_seen') === 'true';
+        if (hasSeenStory) {
+            this.scene.start('MenuScene');
+        } else {
+            this.scene.start('OpeningScene');
+        }
     }
 
     private generatePlaceholderTextures(): void {

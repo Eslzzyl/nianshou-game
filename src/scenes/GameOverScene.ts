@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { GAME_OVER_TEXTS } from '../data/NarrativeData.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { ScoreManager } from '../managers/ScoreManager.js';
 import type { LevelType } from '../types/index.js';
@@ -10,6 +11,7 @@ interface GameOverData {
     distance: number;
     level?: LevelType;
     fromSceneKey?: string;
+    failReason?: 'firecracker' | 'lantern' | 'default';
 }
 
 export class GameOverScene extends Scene {
@@ -17,6 +19,7 @@ export class GameOverScene extends Scene {
     private distance = 0;
     private level?: LevelType;
     private fromSceneKey?: string;
+    private failReason: 'firecracker' | 'lantern' | 'default' = 'default';
     private uiContainer?: Phaser.GameObjects.Container;
 
     constructor() {
@@ -28,6 +31,7 @@ export class GameOverScene extends Scene {
         this.distance = data.distance;
         this.level = data.level;
         this.fromSceneKey = data.fromSceneKey;
+        this.failReason = data.failReason || 'default';
     }
 
     create(): void {
@@ -88,10 +92,11 @@ export class GameOverScene extends Scene {
 
     private createGameOverText(): void {
         const centerX = this.scale.width / 2;
+        const gameOverText = GAME_OVER_TEXTS.find((t) => t.condition === this.failReason) || GAME_OVER_TEXTS[0];
 
         // 发光层
-        const glow = this.add.text(centerX, 140, '💔 游戏结束', {
-            fontSize: '60px',
+        const glow = this.add.text(centerX, 120, gameOverText.title, {
+            fontSize: '52px',
             color: '#FF4444',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -101,8 +106,8 @@ export class GameOverScene extends Scene {
         glow.setAlpha(0.3);
 
         // 主文字
-        const text = this.add.text(centerX, 140, '💔 游戏结束', {
-            fontSize: '60px',
+        const text = this.add.text(centerX, 120, gameOverText.title, {
+            fontSize: '52px',
             color: '#FF4444',
             fontStyle: 'bold',
             fontFamily: STYLE.FONT.FAMILY,
@@ -113,22 +118,43 @@ export class GameOverScene extends Scene {
         // 脉冲动画
         this.tweens.add({
             targets: [glow, text],
-            scale: 1.06,
+            scale: 1.05,
             duration: 1000,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',
         });
 
-        // 副标题
-        const subtitle = this.add.text(centerX, 220, '年兽被打败了，但勇气永存...', {
+        // 消息
+        const message = this.add.text(centerX, 190, gameOverText.message, {
             fontSize: '20px',
-            color: '#888888',
+            color: '#CCCCCC',
+            align: 'center',
             fontFamily: STYLE.FONT.FAMILY,
             resolution: UI_RESOLUTION,
         }).setOrigin(0.5);
 
-        this.uiContainer?.add([glow, text, subtitle]);
+        // 鼓励语
+        const encouragement = this.add.text(centerX, 225, gameOverText.encouragement, {
+            fontSize: '18px',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            align: 'center',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        // 提示
+        const hint = this.add.text(centerX, 260, gameOverText.hint, {
+            fontSize: '14px',
+            color: '#888888',
+            fontStyle: 'italic',
+            align: 'center',
+            fontFamily: STYLE.FONT.FAMILY,
+            resolution: UI_RESOLUTION,
+        }).setOrigin(0.5);
+
+        this.uiContainer?.add([glow, text, message, encouragement, hint]);
     }
 
     private createStats(): void {

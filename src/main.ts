@@ -7,6 +7,7 @@ import { BossScene } from './scenes/BossScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
+import { OpeningScene } from './scenes/OpeningScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { StoryScene } from './scenes/StoryScene.js';
 import { VictoryScene } from './scenes/VictoryScene.js';
@@ -15,6 +16,7 @@ const config: Phaser.Types.Core.GameConfig = {
     ...gameConfig,
     scene: [
         BootScene,
+        OpeningScene,
         MenuScene,
         StoryScene,
         GameScene,
